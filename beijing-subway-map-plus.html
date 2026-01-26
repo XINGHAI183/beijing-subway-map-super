@@ -294,6 +294,57 @@
             user-select: none;
         }
         
+        /* 悬浮窗口样式 */
+        .station-popup-content {
+            padding: 10px;
+            user-select: none;
+        }
+        
+        .station-popup-title {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-align: center;
+            user-select: none;
+        }
+        
+        .station-popup-lines {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            user-select: none;
+        }
+        
+        .station-popup-line {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .station-popup-line .line-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            user-select: none;
+        }
+        
+        .station-popup-line .line-name {
+            font-size: 12px;
+            user-select: none;
+        }
+        
+        /* 激活状态样式 */
+        .station-popup-line[data-active="true"] {
+            background-color: #f0f0f0;
+        }
+        
         /* 图例分隔线容器样式 */
         .legend-divider-wrapper {
             padding: 8px 0;
@@ -1151,6 +1202,46 @@
         // 创建线路LayerGroup字典，用于管理每条线路
         const lineLayers = {};
         
+        // 保存每条线路的荧光线路和主线路引用
+        const linePolylineRefs = {};
+        
+        // 创建站点所属线路映射关系，用于快速查找站点对应的线路
+        const stationToLines = {};
+        
+        // 构建站点到线路的映射
+        Object.keys(lineConnections).forEach(lineName => {
+            const stationNames = lineConnections[lineName];
+            stationNames.forEach(stationName => {
+                if (!stationToLines[stationName]) {
+                    stationToLines[stationName] = [];
+                }
+                if (!stationToLines[stationName].includes(lineName)) {
+                    stationToLines[stationName].push(lineName);
+                }
+            });
+        });
+        
+        // 线路排序函数
+        function sortLines(lineNames) {
+            return lineNames.sort((a, b) => {
+                // 提取线路编号
+                const getLineNumber = (lineName) => {
+                    const matchA = lineName.match(/^(\d+)号线$/);
+                    return matchA ? parseInt(matchA[1]) : Infinity;
+                };
+                
+                const numA = getLineNumber(a);
+                const numB = getLineNumber(b);
+                
+                // 按数字大小排序
+                if (numA !== numB) {
+                    return numA - numB;
+                }
+                // 数字相同或都是非数字线路，按名称排序
+                return a.localeCompare(b);
+            });
+        }
+        
         // 绘制线路和站点
         Object.keys(lineConnections).forEach(lineName => {
             const color = lineColors[lineName] || '#000';
@@ -1169,20 +1260,26 @@
             // 绘制主线路
             if (lineCoords.length > 1) {
                 // 绘制荧光黄色背景线路（高亮效果）- 初始隐藏
-                L.polyline(lineCoords, {
+                const highlightLine = L.polyline(lineCoords, {
                     color: '#FFFF00', // 荧光黄色
-                    weight: 30,
+                    weight: 25,
                     opacity: 0, // 初始隐藏
                     zIndexOffset: -1
                 }).addTo(lineLayer);
                 
                 // 绘制主线路
-                L.polyline(lineCoords, {
+                const mainLine = L.polyline(lineCoords, {
                     color: color,
                     weight: 4,
                     opacity: 1,
                     zIndexOffset: 0
                 }).addTo(lineLayer);
+                
+                // 保存线路引用
+                linePolylineRefs[lineName] = {
+                    highlightLine: highlightLine,
+                    mainLine: mainLine
+                };
                 
                 // 添加到地图
                 lineLayer.addTo(map);
@@ -1200,6 +1297,99 @@
                         weight: 2,
                         opacity: 1,
                         fillOpacity: 1
+                    });
+                    
+                    // 添加点击事件 - 显示站点信息悬浮窗口
+                    stationMarker.addEventListener('click', function(e) {
+                        // 获取站点名称
+                        const currentStationName = stationName;
+                        
+                        // 检查是否点击了同一个站点且已有悬浮窗打开
+                        if (currentPopup && currentPopupStation === currentStationName) {
+                            // 关闭当前悬浮窗
+                            map.closePopup(currentPopup);
+                            currentPopup = null;
+                            currentPopupStation = null;
+                            return;
+                        }
+                        
+                        // 获取站点所属线路
+                        const lines = stationToLines[currentStationName] || [];
+                        
+                        // 排序线路
+                        const sortedLines = sortLines(lines);
+                        
+                        // 创建悬浮窗口内容
+                        const popupContentParts = [
+                            `<div class="station-popup-content">
+                                <h3 class="station-popup-title">${currentStationName}</h3>
+                                <div class="station-popup-lines">`
+                        ];
+                        
+                        // 添加线路按钮
+                        sortedLines.forEach(lineName => {
+                            const lineColor = lineColors[lineName] || '#000';
+                            const isHighlighted = lineHighlightStates[lineName] || false;
+                            
+                            popupContentParts.push(
+                                `<div class="station-popup-line" 
+                                     data-line="${lineName}" 
+                                     data-active="${isHighlighted}">
+                                    <span class="line-color" style="background-color: ${lineColor};"></span>
+                                    <span class="line-name">${lineName}</span>
+                                </div>`
+                            );
+                        });
+                        
+                        popupContentParts.push(
+                            `</div>
+                            </div>`
+                        );
+                        
+                        // 合并数组生成最终HTML
+                        const popupContent = popupContentParts.join('');
+                        
+                        // 关闭之前的悬浮窗
+                        if (currentPopup) {
+                            map.closePopup(currentPopup);
+                        }
+                        
+                        // 创建并显示悬浮窗口
+                        const popup = L.popup({
+                            maxWidth: 300,
+                            minWidth: 150,
+                            closeButton: true,
+                            offset: L.point(0, -5)
+                        })
+                        .setLatLng(e.latlng)
+                        .setContent(popupContent)
+                        .openOn(map);
+                        
+                        // 保存当前悬浮窗状态
+                        currentPopup = popup;
+                        currentPopupStation = currentStationName;
+                        
+                        // 监听悬浮窗关闭事件，重置状态
+                        popup.on('close', function() {
+                            currentPopup = null;
+                            currentPopupStation = null;
+                        });
+                        
+                        // 为悬浮窗口添加事件委托，处理线路按钮点击
+                        setTimeout(() => {
+                            const popup = map._popup;
+                            if (popup) {
+                                const popupContent = popup._contentNode;
+                                popupContent.addEventListener('click', function(e) {
+                                    const lineButton = e.target.closest('.station-popup-line');
+                                    if (lineButton) {
+                                        const lineName = lineButton.dataset.line;
+                                        // 调用线路高亮函数
+                                        handleLegendItemClick(lineName);
+                                    }
+                                });
+                            }
+                        }, 100);
                     });
                     
                     // 添加到站点标记LayerGroup
@@ -1335,27 +1525,74 @@
         toggleStationPoints(showStationPoints);
         toggleLegend(showLegend);
         
+        // 线路高光状态字典
+        const lineHighlightStates = {};
+        
+        // 当前打开的悬浮窗和对应的站点
+        let currentPopup = null;
+        let currentPopupStation = null;
+        
         // 图例点击事件处理 - 切换荧光线路显示/隐藏
         function handleLegendItemClick(lineName) {
-            const lineLayer = lineLayers[lineName];
-            let isFirstLayer = true;
+            // 使用保存的线路引用
+            const lineRefs = linePolylineRefs[lineName];
+            if (!lineRefs) return;
             
-            lineLayer.eachLayer(layer => {
-                if (layer instanceof L.Polyline) {
-                    if (isFirstLayer) {
-                        // 第一条是荧光背景线路 - 切换显示/隐藏
-                        const currentOpacity = layer.options.opacity;
-                        layer.setStyle({
-                            opacity: currentOpacity > 0 ? 0 : 0.5, // 切换透明度
-                            weight: 16
-                        });
-                        isFirstLayer = false;
+            const highlightLine = lineRefs.highlightLine;
+            const mainLine = lineRefs.mainLine;
+            
+            // 切换荧光线路显示/隐藏
+            const currentOpacity = highlightLine.options.opacity;
+            const newOpacity = currentOpacity > 0 ? 0 : 0.8;
+            highlightLine.setStyle({
+                opacity: newOpacity,
+                weight: 25
+            });
+            
+            mainLine.setStyle({
+                opacity: 1,
+                weight: 4
+            });
+            
+            // 更新线路高光状态
+            const isHighlighted = newOpacity > 0;
+            lineHighlightStates[lineName] = isHighlighted;
+            
+            // 更新所有相关图例项和悬浮窗口按钮的状态
+            updateUIElementsForLine(lineName, isHighlighted);
+        }
+        
+        // 更新UI元素状态（图例项和悬浮窗口按钮）
+        function updateUIElementsForLine(lineName, isHighlighted) {
+            // 更新图例项状态
+            const legendItems = document.querySelectorAll('.legend-item');
+            legendItems.forEach(item => {
+                const itemLineName = item.querySelector('.legend-text').textContent;
+                if (itemLineName === lineName) {
+                    if (isHighlighted) {
+                        // 激活状态 - 颜色变深
+                        item.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        item.dataset.active = 'true';
                     } else {
-                        // 第二条是主线路 - 保持正常显示
-                        layer.setStyle({
-                            opacity: 1, // 始终正常显示
-                            weight: 4
-                        });
+                        // 恢复原状
+                        item.style.backgroundColor = 'transparent';
+                        item.dataset.active = 'false';
+                    }
+                }
+            });
+            
+            // 更新所有悬浮窗口中的线路按钮状态
+            const popupLineButtons = document.querySelectorAll('.station-popup-line');
+            popupLineButtons.forEach(btn => {
+                if (btn.dataset.line === lineName) {
+                    if (isHighlighted) {
+                        // 激活状态 - 颜色变深
+                        btn.style.backgroundColor = '#f0f0f0';
+                        btn.dataset.active = 'true';
+                    } else {
+                        // 恢复原状
+                        btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        btn.dataset.active = 'false';
                     }
                 }
             });
@@ -1366,6 +1603,7 @@
         legendItems.forEach(item => {
             const lineName = item.querySelector('.legend-text').textContent;
             item.addEventListener('click', () => {
+                // 直接调用线路高亮函数，状态由高光是否显示决定
                 handleLegendItemClick(lineName);
             });
         });
