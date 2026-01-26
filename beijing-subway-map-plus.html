@@ -1148,6 +1148,9 @@
         const stationPointsGroup = L.layerGroup();
         const stationLabelsGroup = L.layerGroup();
         
+        // 创建线路LayerGroup字典，用于管理每条线路
+        const lineLayers = {};
+        
         // 绘制线路和站点
         Object.keys(lineConnections).forEach(lineName => {
             const color = lineColors[lineName] || '#000';
@@ -1159,13 +1162,30 @@
                 return station ? [station.lat, station.lng] : null;
             }).filter(coord => coord !== null);
 
-            // 绘制线路
+            // 创建线路LayerGroup
+            const lineLayer = L.layerGroup();
+            lineLayers[lineName] = lineLayer;
+            
+            // 绘制主线路
             if (lineCoords.length > 1) {
+                // 绘制荧光黄色背景线路（高亮效果）- 初始隐藏
+                L.polyline(lineCoords, {
+                    color: '#FFFF00', // 荧光黄色
+                    weight: 30,
+                    opacity: 0, // 初始隐藏
+                    zIndexOffset: -1
+                }).addTo(lineLayer);
+                
+                // 绘制主线路
                 L.polyline(lineCoords, {
                     color: color,
                     weight: 4,
-                    opacity: 1
-                }).addTo(map);
+                    opacity: 1,
+                    zIndexOffset: 0
+                }).addTo(lineLayer);
+                
+                // 添加到地图
+                lineLayer.addTo(map);
             }
 
             // 添加站点标记和标签
@@ -1191,7 +1211,7 @@
                             className: 'station-label',
                             html: stationName,
                             iconSize: null, // 让Leaflet自动计算大小
-                            iconAnchor: [0, 0], // 中心点对齐
+                            iconAnchor: [-5, -2],
                             popupAnchor: [0, 0]
                         })
                     });
@@ -1314,6 +1334,41 @@
         updateStationNamesCheckbox();
         toggleStationPoints(showStationPoints);
         toggleLegend(showLegend);
+        
+        // 图例点击事件处理 - 切换荧光线路显示/隐藏
+        function handleLegendItemClick(lineName) {
+            const lineLayer = lineLayers[lineName];
+            let isFirstLayer = true;
+            
+            lineLayer.eachLayer(layer => {
+                if (layer instanceof L.Polyline) {
+                    if (isFirstLayer) {
+                        // 第一条是荧光背景线路 - 切换显示/隐藏
+                        const currentOpacity = layer.options.opacity;
+                        layer.setStyle({
+                            opacity: currentOpacity > 0 ? 0 : 0.5, // 切换透明度
+                            weight: 16
+                        });
+                        isFirstLayer = false;
+                    } else {
+                        // 第二条是主线路 - 保持正常显示
+                        layer.setStyle({
+                            opacity: 1, // 始终正常显示
+                            weight: 4
+                        });
+                    }
+                }
+            });
+        }
+        
+        // 为所有图例项添加点击事件
+        const legendItems = document.querySelectorAll('.legend-item');
+        legendItems.forEach(item => {
+            const lineName = item.querySelector('.legend-text').textContent;
+            item.addEventListener('click', () => {
+                handleLegendItemClick(lineName);
+            });
+        });
         
         // 显示站点开关事件
         showStationPointsCheckbox.addEventListener('change', function() {
