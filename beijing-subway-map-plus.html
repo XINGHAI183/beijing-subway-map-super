@@ -20,17 +20,19 @@
             font-size: 12px !important;
             font-weight: normal;
             color: #000;
-            background: rgba(255, 255, 255, 0.7);
-            padding: 8px 15px;
-            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1px 5px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             white-space: nowrap;
             z-index: 1000;
-            display: block;
-            width: auto;
+            display: inline-block;
             text-align: center;
             margin: 0;
-            line-height: 0.2;
+            line-height: 1.5;
             box-sizing: border-box;
+            height: auto;
+            width: auto;
         }
         
         body {
@@ -333,6 +335,19 @@
             align-items: center;
             gap: 5px;
             font-size: 12px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .legend-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .legend-item.active {
+            opacity: 0.8;
         }
         
         .legend-color {
@@ -1175,8 +1190,8 @@
                         icon: L.divIcon({
                             className: 'station-label',
                             html: stationName,
-                            iconSize: [70, 10],
-                            iconAnchor: [-5, -5],
+                            iconSize: null, // 让Leaflet自动计算大小
+                            iconAnchor: [0, 0], // 中心点对齐
                             popupAnchor: [0, 0]
                         })
                     });
