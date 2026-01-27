@@ -1,0 +1,2717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>北京轨道地图Super</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100vw;
+            background-color: white;
+        }
+        .station-label {
+            font-size: 12px !important;
+            font-weight: normal;
+            color: #000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1px 5px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            white-space: nowrap;
+            z-index: 1000;
+            display: inline-block;
+            text-align: center;
+            margin: 0;
+            line-height: 1.5;
+            box-sizing: border-box;
+            height: auto;
+            width: auto;
+            cursor: default;
+        }
+        
+        body {
+            position: relative;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        
+        /* 工具栏样式 */
+        .toolbar {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 10px 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            pointer-events: auto;
+            user-select: none;
+            width: 200px;
+            box-sizing: border-box;
+        }
+        
+        /* Leaflet缩放控制按钮样式 */
+        .leaflet-control-zoom {
+            background: rgba(255, 255, 255, 0.9) !important;
+            opacity: 0.9 !important;
+            border: none !important;
+            border-radius: 5px !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+            top: 20px !important;
+            left: 20px !important;
+            right: auto !important;
+            z-index: 1000 !important;
+        }
+        
+        .leaflet-control-zoom-in {
+            background: rgba(255, 255, 255, 0.9) !important;
+            opacity: 1 !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            border-radius: 5px 5px 0 0 !important;
+        }
+        
+        .leaflet-control-zoom-out {
+            background: rgba(255, 255, 255, 0.9) !important;
+            opacity: 1 !important;
+            border: none !important;
+            box-shadow: none !important;
+            margin: 0 !important;
+            border-radius: 0 0 5px 5px !important;
+        }
+        
+        /* Leaflet控件容器样式 */
+        .leaflet-control {
+            opacity: 0.9 !important;
+            margin: 0 !important;
+        }
+        
+        .leaflet-bar {
+            border: none !important;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
+            background: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 5px !important;
+            padding: 0 !important;
+        }
+        
+        .leaflet-bottom.leaflet-left {
+            z-index: 1000 !important;
+        }
+        
+        /* 单个控制项样式 */
+        .control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        /* 滑块容器样式 */
+        .slider-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 8px;
+        }
+        
+        /* 滑块标题行样式 */
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        /* 滑块标签样式 */
+        .slider-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: normal;
+        }
+        
+        /* 范围滑块样式 - 基础样式 */
+        input[type="range"] {
+            width: 98.7%;
+            height: 6px;
+            background: #ddd;
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            border-radius: 3px;
+            /* 移除默认样式影响 */
+            -webkit-appearance: none;
+            appearance: none;
+            /* 修复Chrome主题色影响 */
+            accent-color: #004EA2 !important;
+        }
+        
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+        
+        /* 滑块拇指样式 - WebKit (Chrome, Safari, Edge) */
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #004EA2;
+            cursor: pointer;
+            border-radius: 50%;
+            /* 修复Chrome主题色影响 */
+            -webkit-box-shadow: none;
+            box-shadow: none;
+            /* 修复拇指垂直居中 - 轨道高度6px，拇指高度16px，所以margin-top为(6-16)/2 = -5px */
+            margin-top: -5px;
+        }
+        
+        /* 滑块轨道样式 - WebKit */
+        input[type="range"]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            /* 修复Chrome主题色影响 */
+            -webkit-box-shadow: none;
+            box-shadow: none;
+        }
+        
+        /* 滑块拇指样式 - Firefox */
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #004EA2;
+            cursor: pointer;
+            border-radius: 50%;
+            border: none;
+            /* 修复Firefox主题色影响 */
+            box-shadow: none;
+        }
+        
+        /* 滑块轨道样式 - Firefox */
+        input[type="range"]::-moz-range-track {
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            /* 修复Firefox主题色影响 */
+            box-shadow: none;
+        }
+        
+        /* 不透明度值样式 */
+        .opacity-value {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        /* 分隔线样式 */
+        .divider {
+            width: 100%;
+            height: 1px;
+            background-color: #ddd;
+            margin: 8px 0;
+        }
+        
+        /* 开关样式 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #004EA2;
+        }
+        
+        input:focus + .slider {
+            box-shadow: 0 0 1px #004EA2;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        
+        .control-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: normal;
+        }
+        
+        .switch-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: normal;
+        }
+        
+        /* 图例样式 */
+        .legend-container {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            max-width: 200px;
+            font-family: Arial, sans-serif;
+            pointer-events: auto;
+            user-select: none;
+        }
+        
+        /* 悬浮窗口样式 */
+        .station-popup-content {
+            padding: 10px;
+            user-select: none;
+        }
+        
+        .station-popup-title {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            text-align: center;
+            user-select: none;
+        }
+        
+        .station-popup-lines {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            user-select: none;
+        }
+        
+        .station-popup-line {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .station-popup-line .line-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            user-select: none;
+        }
+        
+        .station-popup-line .line-name {
+            font-size: 12px;
+            user-select: none;
+        }
+        
+        /* 激活状态样式 */
+        .station-popup-line[data-active="true"] {
+            background-color: #f0f0f0;
+        }
+        
+        /* 图例分隔线容器样式 */
+        .legend-divider-wrapper {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* 图例分隔线样式 */
+        .legend-divider {
+            height: 1px;
+            background-color: #ddd;
+            width: 100%;
+            margin: 0;
+        }
+        
+        /* 允许输入元素被选择和交互 */
+        input, textarea {
+            user-select: auto;
+            pointer-events: auto;
+        }
+        
+        /* 自定义下拉菜单容器 */
+        .custom-dropdown {
+            position: relative;
+            min-width: 60px;
+            margin-right: 25px;
+        }
+        
+        /* 下拉菜单触发按钮 */
+        .dropdown-toggle {
+            width: 135%;
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+        
+        /* 触发按钮悬停效果 */
+        .dropdown-toggle:hover {
+            border-color: #ccc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 触发按钮激活效果 */
+        .dropdown-toggle.active {
+            border-color: #004EA2;
+            box-shadow: 0 0 0 2px rgba(0, 78, 162, 0.1);
+        }
+        
+        /* 下拉箭头 */
+        .dropdown-arrow {
+            transition: transform 0.2s ease;
+            transform-origin: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 0px;
+        }
+        
+        /* 箭头图标样式 */
+        .dropdown-arrow i {
+            font-size: 10px;
+            color: #666;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        
+        /* 箭头旋转效果 */
+        .dropdown-toggle.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        /* 下拉菜单选项列表 */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 135%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 9999;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            box-sizing: border-box;
+        }
+        
+        /* 下拉菜单显示状态 */
+        .dropdown-menu.show {
+            display: block;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        
+        /* 淡入动画 */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 下拉选项 */
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
+        /* 选项悬停效果 */
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* 选项选中效果 */
+        .dropdown-item.selected {
+            background-color: #e6f0f8;
+            color: #004EA2;
+        }
+        
+        .legend-container h3 {
+            margin: 0;
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            text-align: center;
+        }
+        
+        .legend-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            cursor: pointer;
+            padding: 2px 5px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .legend-item:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .legend-item.active {
+            opacity: 0.8;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            display: inline-block;
+        }
+        
+        .legend-text {
+            color: #333;
+        }
+        
+        /* 搜索容器样式 */
+        .custom-search {
+            position: relative;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        /* 搜索标题 */
+        .search-header {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        /* 搜索输入框样式 */
+        .search-input {
+            width: 100%;
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+        
+        /* 搜索输入框聚焦效果 */
+        .search-input:focus {
+            outline: none;
+            border-color: #004EA2;
+            box-shadow: 0 0 0 2px rgba(0, 78, 162, 0.1);
+        }
+        
+        /* 搜索结果容器样式 */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: block;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+        }
+        
+        /* 搜索结果容器显示状态 */
+        .search-results.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        /* 淡入动画 */
+        @keyframes searchFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 搜索结果项样式 */
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
+        /* 搜索结果项悬停效果 */
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* 无结果提示 */
+        .no-results {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #999;
+            cursor: default;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
+        /* 地图容器样式 */
+        #map {
+            position: relative;
+        }
+        
+        /* 工具栏部分标题样式 */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            padding: 5px 0;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .section-header:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+            border-radius: 4px;
+        }
+        
+        /* 箭头样式 */
+        .section-arrow {
+            font-size: 12px;
+            transition: transform 0.2s ease;
+            transform-origin: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+        }
+        
+        /* 箭头旋转样式 */
+        .section-header.collapsed .section-arrow {
+            transform: rotate(-90deg);
+        }
+        
+        /* Font Awesome箭头图标样式 */
+        .section-arrow i {
+            font-size: 10px;
+            color: #666;
+            vertical-align: middle;
+            display: inline-block;
+        }
+        
+        /* 部分内容样式 */
+        .section-content {
+            overflow: visible;
+            transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            max-height: 1000px;
+            margin: 10px 0;
+            padding: 0;
+            width: 100%;
+            opacity: 1;
+        }
+        
+        /* 工具和设置部分内的元素间距 */
+        .section-content > * {
+            margin-bottom: 10px;
+            width: 100%;
+        }
+        
+        .section-content > *:last-child {
+            margin-bottom: 0;
+        }
+        
+        /* 部分内容折叠样式 */
+        .section-content.collapsed {
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <!-- 工具部分标题 -->
+            <div class="section-header collapsed" data-section="tools">
+                <span style="font-weight: bold;">工具</span>
+                <span class="section-arrow"><i class="fas fa-chevron-down"></i></span>
+            </div>
+        
+            <!-- 工具部分内容 -->
+            <div class="section-content collapsed" id="toolsContent">
+                <!-- 站点搜索输入框 -->
+                <div class="custom-search">
+                    <div class="search-header">搜索站点</div>
+                    <input type="text" id="stationSearch" placeholder="站名" class="search-input">
+                    <div class="search-results" id="searchResults"></div>
+                </div>
+                
+                <!-- 分隔线 -->
+                <div class="divider"></div>
+                
+                <!-- 路径查询 -->
+                <div class="route-search">
+                    <div class="search-header">查询路径</div>
+                    <div class="custom-search" style="margin-bottom: 8px;">
+                        <input type="text" id="startStation" placeholder="起点" class="search-input">
+                        <div class="search-results" id="startStationResults"></div>
+                    </div>
+                    <div class="custom-search" style="margin-bottom: 8px;">
+                        <input type="text" id="endStation" placeholder="终点" class="search-input">
+                        <div class="search-results" id="endStationResults"></div>
+                    </div>
+                    <button id="searchRouteBtn" style="width: 100%; padding: 8px; background-color: #004EA2; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: background-color 0.2s ease;">查询</button>
+                </div>
+                
+                <!-- 查询结果展示 -->
+                <div id="routeResult" style="display: none; margin-top: 10px; padding: 8px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 5px; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+                    <div style="font-weight: bold; margin-bottom: 5px;">查询结果</div>
+                    <div id="routeSummary" style="margin-bottom: 5px;"></div>
+                    <div id="routeDetails" style="line-height: 1.4;"></div>
+                    <button id="clearRouteBtn" style="width: 100%; margin-top: 8px; padding: 4px; background-color: #f0f0f0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">清除</button>
+                </div>
+            </div>
+            
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+            
+            <!-- 设置部分标题 -->
+            <div class="section-header collapsed" data-section="settings">
+                <span style="font-weight: bold;">设置</span>
+                <span class="section-arrow"><i class="fas fa-chevron-down"></i></span>
+            </div>
+            
+            <!-- 设置部分内容 -->
+            <div class="section-content collapsed" id="settingsContent">
+                
+                <!-- 底图不透明度滑块 -->
+                <div class="slider-container">
+                    <div class="slider-header">
+                        <label for="maskOpacity" class="slider-label">底图不透明度</label>
+                        <span id="opacityValue" class="opacity-value"></span>
+                    </div>
+                    <input type="range" id="maskOpacity" min="0" max="100">
+                </div>
+                
+                <!-- 背景颜色选择器 -->
+                <div class="control-item">
+                    <span class="control-label">背景颜色</span>
+                    <input type="color" id="bgColorPicker" value="#ffffff" style="width: 40px; height: 24px; cursor: pointer; border: none; border-radius: 3px;">
+                </div>
+                
+                <!-- 分隔线 -->
+                <div class="divider"></div>
+                
+                <!-- 显示站点开关 -->
+                <div class="control-item">
+                    <span class="switch-label">显示站点</span>
+                    <label class="switch">
+                        <input type="checkbox" id="showStationPoints">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <!-- 显示站名开关 -->
+                <div class="control-item">
+                    <span class="switch-label">显示站名</span>
+                    <label class="switch">
+                        <input type="checkbox" id="showStationNames">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <!-- 显示图例开关 -->
+                <div class="control-item">
+                    <span class="switch-label">显示图例</span>
+                    <label class="switch">
+                        <input type="checkbox" id="showLegend">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <!-- 分隔线 -->
+                <div class="divider"></div>
+                
+                <!-- 底图来源选择 -->
+                <div class="control-item">
+                    <span class="control-label">地图服务</span>
+                    <div class="custom-dropdown">
+                        <div class="dropdown-toggle" id="mapSourceToggle">
+                            <span class="selected-text">AMap</span>
+                            <span class="dropdown-arrow"><i class="fas fa-chevron-down"></i></span>
+                        </div>
+                        <div class="dropdown-menu" id="mapSourceMenu">
+                            <div class="dropdown-item" data-value="osm">OSM</div>
+                            <div class="dropdown-item selected" data-value="amap">AMap</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="map"></div>
+        
+        <!-- 图例容器 -->
+        <div class="legend-container" id="legend" style="display: none;">
+            <h3>图例</h3>
+            <div class="legend-divider-wrapper">
+                <div class="legend-divider"></div>
+            </div>
+            <div class="legend-content">
+                <div class="legend-item"><span class="legend-color" style="background-color: #C03A2E;"></span><span class="legend-text">1号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #005F98;"></span><span class="legend-text">2号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #E70032;"></span><span class="legend-text">3号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #008F9C;"></span><span class="legend-text">4号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #A7217E;"></span><span class="legend-text">5号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #D29500;"></span><span class="legend-text">6号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #F9C570;"></span><span class="legend-text">7号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #009C6C;"></span><span class="legend-text">8号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #8EC41E;"></span><span class="legend-text">9号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #009BC0;"></span><span class="legend-text">10号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #EB796B;"></span><span class="legend-text">11号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #BF640F;"></span><span class="legend-text">12号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #F8E700;"></span><span class="legend-text">13号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #D3A79F;"></span><span class="legend-text">14号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #6A357B;"></span><span class="legend-text">15号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #76A22C;"></span><span class="legend-text">16号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #01A9A9;"></span><span class="legend-text">17号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #5554A2;"></span><span class="legend-text">18号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #D5ABC0;"></span><span class="legend-text">19号线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #C03A2E;"></span><span class="legend-text">八通线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #008F9C;"></span><span class="legend-text">大兴线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #DE82B1;"></span><span class="legend-text">昌平线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #E30078;"></span><span class="legend-text">亦庄线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #E36021;"></span><span class="legend-text">房山线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #E36021;"></span><span class="legend-text">燕房线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #A19ABA;"></span><span class="legend-text">首都机场线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #014BA2;"></span><span class="legend-text">大兴机场线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #B05B1F;"></span><span class="legend-text">S1线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #E73423;"></span><span class="legend-text">西郊线</span></div>
+                <div class="legend-item"><span class="legend-color" style="background-color: #D32630;"></span><span class="legend-text">亦庄T1线</span></div>
+            </div>
+        </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // 初始化地图
+        const map = L.map('map').setView([39.9042, 116.4074], 12);
+
+        // 创建不同的底图图层
+        const baseLayers = {
+            'osm': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }),
+            'amap': L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                attribution: '© 高德地图'
+            })
+        };
+        
+        // 添加默认底图（高德地图）
+        let currentBaseLayer = baseLayers['amap'];
+        currentBaseLayer.addTo(map);
+        
+        // 底图初始透明度设为1.0，后续通过滑块控制
+        let baseOpacity = 1.0;
+        currentBaseLayer.setOpacity(baseOpacity);
+        
+
+        // 线路颜色配置
+        const lineColors = {
+            '1号线': '#C03A2E',
+            '2号线': '#005F98',
+            '3号线': '#E70032',
+            '4号线': '#008F9C',
+            '5号线': '#A7217E',
+            '6号线': '#D29500',
+            '7号线': '#F9C570',
+            '8号线': '#009C6C',
+            '9号线': '#8EC41E',
+            '10号线': '#009BC0',
+            '11号线': '#EB796B',
+            '12号线': '#BF640F',
+            '13号线': '#F8E700',
+            '14号线': '#D3A79F',
+            '15号线': '#6A357B',
+            '16号线': '#76A22C',
+            '17号线': '#01A9A9',
+            '18号线': '#5554A2',
+            '19号线': '#D5ABC0',
+            '八通线': '#C03A2E',
+            '大兴线': '#008F9C',
+            '昌平线': '#DE82B1',
+            '亦庄线': '#E30078',
+            '房山线': '#E36021',
+            '燕房线': '#E36021',
+            '首都机场线': '#A19ABA',
+            '大兴机场线': '#014BA2',
+            'S1线': '#B05B1F',
+            '西郊线': '#E73423',
+            '亦庄T1线': '#D32630'
+        };
+
+        // 所有站点数据，按名称索引
+        const allStations = {
+            // 1号线
+            '古城': { lat: 39.9072014648, lng: 116.1902475357 },
+            '八宝山': { lat: 39.9072673042, lng: 116.2358236313 },
+            '玉泉路': { lat: 39.9073331435, lng: 116.2530326843 },
+            '五棵松': { lat: 39.9078269362, lng: 116.2740182877 },
+            '万寿路': { lat: 39.9074319023, lng: 116.2951755524 },
+            '公主坟': { lat: 39.9074319023, lng: 116.3097667694 },
+            '军事博物馆': { lat: 39.9074648219, lng: 116.3240146637 },
+            '木樨地': { lat: 39.9076294195, lng: 116.3374471664 },
+            '南礼士路': { lat: 39.9072014648, lng: 116.3525962830 },
+            '复兴门': { lat: 39.9071685451, lng: 116.3565444946 },
+            '西单': { lat: 39.9074319023, lng: 116.3742685318 },
+            '天安门西': { lat: 39.9074648219, lng: 116.3917350769 },
+            '天安门东': { lat: 39.9077281779, lng: 116.4016485214 },
+            '王府井': { lat: 39.9080244523, lng: 116.4115619659 },
+            '东单': { lat: 39.9081890486, lng: 116.4179134369 },
+            '建国门': { lat: 39.9085182400, lng: 116.4358091354 },
+            '永安里': { lat: 39.9083865636, lng: 116.4504861832 },
+            '国贸': { lat: 39.9091436994, lng: 116.4619016647 },
+            '大望路': { lat: 39.9085182400, lng: 116.4770936966 },
+            '四惠': { lat: 39.9087157541, lng: 116.4954614639 },
+            '四惠东': { lat: 39.9085182400, lng: 116.5153312683 },
+
+            // 八通线
+            '四惠': { lat: 39.9087157541, lng: 116.4954614639 },
+            '四惠东': { lat: 39.9085182400, lng: 116.5153312683 },
+            '高碑店': { lat: 39.9094, lng: 116.5314 },
+            '传媒大学': { lat: 39.9092, lng: 116.5546 },
+            '双桥': { lat: 39.9101, lng: 116.5767 },
+            '管庄': { lat: 39.9091, lng: 116.5990 },
+            '八里桥': { lat: 39.9061, lng: 116.6186 },
+            '通州北苑': { lat: 39.9039, lng: 116.6372 },
+            '果园': { lat: 39.8933, lng: 116.6466 },
+            '九棵树': { lat: 39.8902, lng: 116.6575 },
+            '梨园': { lat: 39.8836, lng: 116.6687 },
+            '临河里': { lat: 39.8755, lng: 116.6787 },
+            '土桥': { lat: 39.8719, lng: 116.6864 },
+            '花庄': { lat: 39.8567, lng: 116.6955 },
+            '环球度假区': { lat: 39.8490, lng: 116.6791 },
+
+            // 2号线
+            '西直门': { lat: 39.9404422892, lng: 116.3554716110 },
+            '车公庄': { lat: 39.9322487730, lng: 116.3558149338 },
+            '阜成门': { lat: 39.9233960408, lng: 116.3559865952 },
+            // [复兴门(1)]
+            '长椿街': { lat: 39.8996295163, lng: 116.3630676270 },
+            '宣武门': { lat: 39.8996624396, lng: 116.3743114471 },
+            '和平门': { lat: 39.9000904414, lng: 116.3841819763 },
+            '前门': { lat: 39.8999587488, lng: 116.3979578018 },
+            '崇文门': { lat: 39.9009793597, lng: 116.4168834686 },
+            '北京站': { lat: 39.9049628889, lng: 116.4272689819 },
+            // [建国门(1)]
+            '朝阳门': { lat: 39.9249428832, lng: 116.4346075058 },
+            '东四十条': { lat: 39.9338612292, lng: 116.4340066910 },
+            '东直门': { lat: 39.9411332638, lng: 116.4336633682 },
+            '雍和宫': { lat: 39.9492599173, lng: 116.4169692993 },
+            '安定门': { lat: 39.9491283193, lng: 116.4083003998 },
+            '鼓楼大街': { lat: 39.9478123250, lng: 116.3938379288 },
+            '积水潭': { lat: 39.9487335236, lng: 116.3731956482 },
+
+            // 3号线
+            // [东四十条(2)]
+            '工人体育场': { lat: 39.9337, lng: 116.4491 },
+            '团结湖': { lat: 39.9337, lng: 116.4600 },
+            '朝阳公园': { lat: 39.9337, lng: 116.4801 },
+            '石佛营': { lat: 39.9352, lng: 116.4988 },
+            '朝阳站': { lat: 39.9438, lng: 116.5058 },
+            '姚家园': { lat: 39.9477, lng: 116.5272 },
+            '东坝南': { lat: 39.9521, lng: 116.5470 },
+            '东坝': { lat: 39.9657, lng: 116.5471 },
+            '东坝北': { lat: 39.9756, lng: 116.5574 },
+
+            // 4号线
+            '安河桥北': { lat: 40.0118554028, lng: 116.2699842453 },
+            '北宫门': { lat: 40.0023554989, lng: 116.2776875496 },
+            '西苑': { lat: 39.9983283241, lng: 116.2909269333 },
+            '圆明园': { lat: 39.9994954074, lng: 116.3096809387 },
+            '北京大学东门': { lat: 39.9921473816, lng: 116.3159036636 },
+            '中关村': { lat: 39.9838449697, lng: 116.3164830208 },
+            '海淀黄庄': { lat: 39.9756402091, lng: 116.3175773621 },
+            '人民大学': { lat: 39.9674015726, lng: 116.3213539124 },
+            '魏公村': { lat: 39.9578132466, lng: 116.3232851028 },
+            '国家图书馆': { lat: 39.9432061456, lng: 116.3251948357 },
+            '动物园': { lat: 39.9382047998, lng: 116.3388204575 },
+            // [西直门(2,13)]
+            '新街口': { lat: 39.9405080966, lng: 116.3677883148 },
+            '平安里': { lat: 39.9336637876, lng: 116.3728952408 },
+            '西四': { lat: 39.9245808594, lng: 116.3734102249 },
+            '灵境胡同': { lat: 39.9160892062, lng: 116.3737535477 },
+            // [西单(1)]
+            // [宣武门(2)]
+            '菜市口': { lat: 39.8894554507, lng: 116.3739252090 },
+            '陶然亭': { lat: 39.8785388760, lng: 116.3743543625 },
+            '北京南站': { lat: 39.8648536559, lng: 116.3792896271 },
+            '马家堡': { lat: 39.8532248377, lng: 116.3712644577 },
+            '角门西': { lat: 39.8459414105, lng: 116.3711491227 },
+            '公益西桥': { lat: 39.8370219177, lng: 116.3708353043 },
+
+            // 大兴线
+            '天宫院': { lat: 39.6703, lng: 116.3198 },
+            '生物医药基地': { lat: 39.6865, lng: 116.3216 },
+            '义和庄': { lat: 39.7124, lng: 116.3190 },
+            '黄村火车站': { lat: 39.7231, lng: 116.3327 },
+            '黄村西大街': { lat: 39.7316, lng: 116.3324 },
+            '清源路': { lat: 39.7427, lng: 116.3325 },
+            '枣园': { lat: 39.7534, lng: 116.3322 },
+            '高米店南': { lat: 39.7635, lng: 116.3316 },
+            '高米店北': { lat: 39.7735, lng: 116.3307 },
+            '西红门': { lat: 39.7897, lng: 116.3287 },
+            '新宫': { lat: 39.8125, lng: 116.3655 },
+            '公益西桥': { lat: 39.8370219177, lng: 116.3708353043 },
+
+            // 5号线
+            '宋家庄': { lat: 39.8457869613, lng: 116.4283740520 },
+            '刘家窑': { lat: 39.8576455856, lng: 116.4221245050 },
+            '蒲黄榆': { lat: 39.8656647996, lng: 116.4215612411 },
+            '天坛东门': { lat: 39.8830639907, lng: 116.4208289981 },
+            '磁器口': { lat: 39.8931227334, lng: 116.4187248051 },
+            // [崇文门(2)]
+            // [东单(1)]
+            '灯市口': { lat: 39.9172165503, lng: 116.4177873731 },
+            '东四': { lat: 39.9243700208, lng: 116.4174936712 },
+            '张自忠路': { lat: 39.9336596743, lng: 116.4171463251 },
+            '北新桥': { lat: 39.9408618103, lng: 116.4168727398 },
+            // [雍和宫(2)]
+            '和平里北街': { lat: 39.9584074165, lng: 116.4185062051 },
+            '和平西桥': { lat: 39.9685321828, lng: 116.4179724455 },
+            '惠新西街南口': { lat: 39.9769967756, lng: 116.4174628258 },
+            '惠新西街北口': { lat: 39.9875113077, lng: 116.4170658588 },
+            '大屯路东': { lat: 40.0038019364, lng: 116.4173340797 },
+            '北苑路北': { lat: 40.0305062112, lng: 116.4180421829 },
+            '立水桥南': { lat: 40.0418420964, lng: 116.4146518707 },
+            '立水桥': { lat: 40.0530775487, lng: 116.4122486115 },
+            '天通苑南': { lat: 40.0663146083, lng: 116.4129352570 },
+            '天通苑': { lat: 40.0752145100, lng: 116.4131069183 },
+            '天通苑北': { lat: 40.0833908853, lng: 116.4129781723 },
+
+            // 6号线
+            '金安桥': { lat: 39.9233, lng: 116.1625 },
+            '苹果园': { lat: 39.9263251384, lng: 116.1777806282 },
+            '杨庄': { lat: 39.9279, lng: 116.1871 },
+            '西黄村': { lat: 39.9337, lng: 116.2063 },
+            '廖公庄': { lat: 39.9324, lng: 116.2272 },
+            '田村': { lat: 39.9295, lng: 116.2529 },
+            '海淀五路居': { lat: 39.9325778488, lng: 116.2767648697 },
+            '慈寿寺': { lat: 39.9330879131, lng: 116.2951755524 },
+            '花园桥': { lat: 39.9323721766, lng: 116.3101047277 },
+            '白石桥南': { lat: 39.9330241553, lng: 116.3254737854 },
+            '二里沟': { lat: 39.9324, lng: 116.3337 },
+            '车公庄西': { lat: 39.9324719277, lng: 116.3439850509 },
+            // [车公庄(2)]
+            '北海北': { lat: 39.9332730162, lng: 116.3867032528 },
+            '南锣鼓巷': { lat: 39.9331372740, lng: 116.4032471180 },
+            // [东四(5)]
+            // [朝阳门(2)]
+            '东大桥': { lat: 39.9228797332, lng: 116.4517012239 },
+            '呼家楼': { lat: 39.9231985690, lng: 116.4618426561 },
+            '金台路': { lat: 39.9228159658, lng: 116.4780861139 },
+            '十里堡': { lat: 39.9230689778, lng: 116.5018987656 },
+            '青年路': { lat: 39.9231615430, lng: 116.5175521374 },
+            '褡裢坡': { lat: 39.9240213643, lng: 116.5634393692 },
+            '黄渠': { lat: 39.9241694664, lng: 116.5782129765 },
+            '常营': { lat: 39.9257574298, lng: 116.5995419025 },
+            '草房': { lat: 39.9244286443, lng: 116.6154688597 },
+            '物资学院路': { lat: 39.9268, lng: 116.6393 },
+            '通州北关': { lat: 39.9183, lng: 116.6615 },
+            '北运河西': { lat: 39.9030, lng: 116.6883 },
+            '北运河东': { lat: 39.9032, lng: 116.7070 },
+            '郝家府': { lat: 39.9032, lng: 116.7176 },
+            '东夏园': { lat: 39.9031, lng: 116.7338 },
+            '潞城': { lat: 39.9028, lng: 116.7475 },
+            '潞阳': { lat: 39.8900, lng: 116.7573 },
+
+            // 7号线
+            '北京西站': { lat: 39.8947, lng: 116.3211 },
+            '湾子': { lat: 39.8901, lng: 116.3276 },
+            '达官营': { lat: 39.8898, lng: 116.3364 },
+            '广安门内': { lat: 39.8894, lng: 116.3582 },
+            // [菜市口(4)]
+            '虎坊桥': { lat: 39.8894, lng: 116.3846 },
+            '珠市口': { lat: 39.8913, lng: 116.3983 },
+            '桥湾': { lat: 39.8927, lng: 116.4084 },
+            // [磁器口(5)]
+            '广渠门内': { lat: 39.8936, lng: 116.4339 },
+            '广渠门外': { lat: 39.8936, lng: 116.4489 },
+            '双井': { lat: 39.8934, lng: 116.4638 },
+            '九龙山': { lat: 39.8932, lng: 116.4789 },
+            '大郊亭': { lat: 39.8931, lng: 116.4879 },
+            '百子湾': { lat: 39.8925, lng: 116.4977 },
+            '化工': { lat: 39.8874, lng: 116.5035 },
+            '南楼梓庄': { lat: 39.8748, lng: 116.5012 },
+            '欢乐谷景区': { lat: 39.8665, lng: 116.4991 },
+            '垡头': { lat: 39.8607, lng: 116.5118 },
+            '双合': { lat: 39.8597, lng: 116.5267 },
+            '焦化厂': { lat: 39.8555, lng: 116.5372 },
+            '黄厂': { lat: 39.8489, lng: 116.5537 },
+            '郎辛庄': { lat: 39.8564, lng: 116.5697 },
+            '黑庄户': { lat: 39.8586, lng: 116.5991 },
+            '万盛西': { lat: 39.8633, lng: 116.6321 },
+            '万盛东': { lat: 39.8635, lng: 116.6573 },
+            '群芳': { lat: 39.8635, lng: 116.6707 },
+            '高楼金': { lat: 39.8631, lng: 116.6843 },
+            // [花庄(1)]
+            // [环球度假区(1)]
+
+            // 8号线
+            '朱辛庄': { lat: 40.1042, lng: 116.3137 },
+            '育知路': { lat: 40.0878, lng: 116.3269 },
+            '平西府': { lat: 40.0900, lng: 116.3505 },
+            '回龙观东大街': { lat: 40.0811, lng: 116.3632 },
+            '霍营': { lat: 40.0720, lng: 116.3601 },
+            '育新': { lat: 40.0602, lng: 116.3471 },
+            '西小口': { lat: 40.0468, lng: 116.3515 },
+            '永泰庄': { lat: 40.0377, lng: 116.3545 },
+            '林萃桥': { lat: 40.0220, lng: 116.3730 },
+            '森林公园南门': { lat: 40.0099, lng: 116.3925 },
+            '奥林匹克公园': { lat: 40.0007, lng: 116.3930 },
+            '奥体中心': { lat: 39.9857, lng: 116.3938 },
+            '北土城': { lat: 39.9775, lng: 116.3941 },
+            '安华桥': { lat: 39.9686, lng: 116.3940 },
+            '安德里北街': { lat: 39.9572, lng: 116.3951 },
+            // [鼓楼大街(2)]
+            '什刹海': { lat: 39.9375, lng: 116.3961 },
+            // [南锣鼓巷(6)]
+            '中国美术馆': { lat: 39.9237, lng: 116.4108 },
+            '金鱼胡同': { lat: 39.9163, lng: 116.4112 },
+            // [王府井(1)]
+            // [前门(2)]
+            // [珠市口(7)]
+            '天桥': { lat: 39.8820, lng: 116.3987 },
+            '永定门外': { lat: 39.8664, lng: 116.3993 },
+            '木樨园': { lat: 39.8593, lng: 116.3998 },
+            '海户屯': { lat: 39.8517, lng: 116.4003 },
+            '大红门': { lat: 39.8453750952, lng: 116.3988295197 },
+            '大红门南': { lat: 39.8367, lng: 116.4010 },
+            '和义': { lat: 39.8148, lng: 116.4020 },
+            '东高地': { lat: 39.8050, lng: 116.4091 },
+            '火箭万源': { lat: 39.7992, lng: 116.4186 },
+            '五福堂': { lat: 39.7850, lng: 116.4239 },
+            '德茂': { lat: 39.7725, lng: 116.4415 },
+            '瀛海': { lat: 39.7606, lng: 116.4489 },
+
+            // 9号线
+            '郭公庄': { lat: 39.8144, lng: 116.3019 },
+            '丰台科技园': { lat: 39.8252, lng: 116.2971 },
+            '科怡路': { lat: 39.8324, lng: 116.2974 },
+            '丰台南路': { lat: 39.8404, lng: 116.2967 },
+            '丰台东大街': { lat: 39.8551, lng: 116.2938 },
+            '七里庄': { lat: 39.8675310111, lng: 116.2942126393 },
+            '六里桥': { lat: 39.8800, lng: 116.3000 },
+            '六里桥东': { lat: 39.8869, lng: 116.3147 },
+            // [北京西站(7)]
+            // [军事博物馆(1)]
+            '白堆子': { lat: 39.9238, lng: 116.3257 },
+            // [白石桥南(6)]
+            // [国家图书馆(4)]
+
+            // 10号线
+            '巴沟': { lat: 39.9744, lng: 116.2933 },
+            '苏州街': { lat: 39.9755, lng: 116.3062 },
+            // [海淀黄庄(4)]
+            '知春里': { lat: 39.9763, lng: 116.3291 },
+            '知春路': { lat: 39.9764, lng: 116.3413 },
+            '西土城': { lat: 39.9763, lng: 116.3541 },
+            '牡丹园': { lat: 39.9766, lng: 116.3699 },
+            '健德门': { lat: 39.9766, lng: 116.3813 },
+            // [北土城(8)]
+            '安贞门': { lat: 39.9770, lng: 116.4059 },
+            // [惠新西街南口(5)]
+            '芍药居': { lat: 39.9770, lng: 116.4376 },
+            '太阳宫': { lat: 39.9725, lng: 116.4474 },
+            '三元桥': { lat: 39.9607, lng: 116.4571 },
+            '亮马桥': { lat: 39.9494, lng: 116.4622 },
+            '农业展览馆': { lat: 39.9413, lng: 116.4625 },
+            // [团结湖(3)]
+            // [呼家楼(6)]
+            '金台夕照': { lat: 39.9168, lng: 116.4616 },
+            // [国贸(1)]
+            // [双井(7)]
+            '劲松': { lat: 39.8844, lng: 116.4613 },
+            '潘家园': { lat: 39.8753, lng: 116.4610 },
+            '十里河': { lat: 39.8656, lng: 116.4590 },
+            '分钟寺': { lat: 39.8522, lng: 116.4539 },
+            '成寿寺': { lat: 39.8458, lng: 116.4475 },
+            // [宋家庄(5)]
+            '石榴庄': { lat: 39.8458, lng: 116.4140 },
+            // [大红门(8)]
+            '角门东': { lat: 39.8451444491, lng: 116.3849544525 },
+            // [角门西(4)]
+            '草桥': { lat: 39.8459434698, lng: 116.3511532545 },
+            '纪家庙': { lat: 39.8444154376, lng: 116.3332575560 },
+            '首经贸': { lat: 39.8444483875, lng: 116.3202059269 },
+            '丰台站': { lat: 39.8498560655, lng: 116.3050138950 },
+            '泥洼': { lat: 39.8583188650, lng: 116.3043862581 },
+            '西局': { lat: 39.8664841684, lng: 116.3043808937 },
+            // [六里桥(9)]
+            '莲花桥': { lat: 39.8978, lng: 116.3103 },
+            // [公主坟(1)]
+            '西钓鱼台': { lat: 39.9234, lng: 116.2980 },
+            // [慈寿寺(6)]
+            '车道沟': { lat: 39.9479, lng: 116.2938 },
+            '长春桥': { lat: 39.9584, lng: 116.2940 },
+            '火器营': { lat: 39.9659, lng: 116.2890 },
+
+            // 11号线
+            '新首钢': { lat: 39.9088, lng: 116.1648 },
+            '北辛安': { lat: 39.9152, lng: 116.1648 },
+            // [金安桥(6,S1)]
+            '模式口': { lat: 39.9335, lng: 116.1562 },
+
+            // 12号线
+            '四季青桥': { lat: 39.9423, lng: 116.2741 },
+            '蓝靛厂': { lat: 39.9571, lng: 116.2828 },
+            // [长春桥(10)]
+            '苏州桥': { lat: 39.9615, lng: 116.3066 },
+            // [人民大学(4)]
+            '大钟寺': { lat: 39.9676, lng: 116.3436 },
+            '蓟门桥': { lat: 39.9677, lng: 116.3555 },
+            '北太平庄': { lat: 39.9680, lng: 116.3700 },
+            '马甸桥': { lat: 39.9682, lng: 116.3822 },
+            // [安华桥(8)]
+            '安贞桥': { lat: 39.9689, lng: 116.4074 },
+            // [和平西桥(5)]
+            '光熙门': { lat: 39.9694, lng: 116.4303 },
+            '西坝河': { lat: 39.9658, lng: 116.4421 },
+            // [三元桥(10,PEK)]
+            '将台西': { lat: 39.9726, lng: 116.4800 },
+            '高家园': { lat: 39.9803, lng: 116.4912 },
+            '驼房营': { lat: 39.9804, lng: 116.5056 },
+            '东坝西': { lat: 39.9743, lng: 116.5345 },
+            // [东坝北(3)]
+
+            // 13号线
+            // [西直门(2,4)]
+            // [大钟寺(12)]
+            // [知春路(10)]
+            '五道口': { lat: 39.9928, lng: 116.3377 },
+            '上地': { lat: 40.0329, lng: 116.3202 },
+            '清河站': { lat: 40.0410, lng: 116.3147 },
+            '西二旗': { lat: 40.0530, lng: 116.3061 },
+            '龙泽': { lat: 40.0708, lng: 116.3194 },
+            '回龙观': { lat: 40.0707, lng: 116.3361 },
+            // [霍营(8)]
+            // [立水桥(5)]
+            '北苑': { lat: 40.0430, lng: 116.4345 },
+            '望京西': { lat: 39.9959858785, lng: 116.4515912533 },
+            // [芍药居(10)]
+            // [光熙门(12)]
+            '柳芳': { lat: 39.9580, lng: 116.4327 },
+            // [东直门(2,PEK)]
+
+            // 14号线
+            '张郭庄': { lat: 39.8583147471, lng: 116.1871576309 },
+            '园博园': { lat: 39.8612301562, lng: 116.2019205093 },
+            '大瓦窑': { lat: 39.8595830477, lng: 116.2395787239 },
+            '郭庄子': { lat: 39.8643780825, lng: 116.2531399727 },
+            '大井': { lat: 39.8652077604, lng: 116.2763088942 },
+            // [七里庄(9)]
+            // [西局(10)]
+            '东管头': { lat: 39.8675, lng: 116.3213 },
+            '丽泽商务区': { lat: 39.8676, lng: 116.3315 },
+            '菜户营': { lat: 39.8676, lng: 116.3421 },
+            '西铁营': { lat: 39.8613, lng: 116.3558 },
+            '景风门': { lat: 39.8626, lng: 116.3656 },
+            // [北京南站(4)]
+            // [永定门外(8)]
+            '景泰': { lat: 39.8651, lng: 116.4108 },
+            // [蒲黄榆(5)]
+            '方庄': { lat: 39.8658, lng: 116.4402 },
+            // [十里河(10,17)]
+            '北工大西门': { lat: 39.8754, lng: 116.4773 },
+            '平乐园': { lat: 39.8849, lng: 116.4773 },
+            // [九龙山(7)]
+            // [大望路(1)]
+            // [金台路(6)]
+            // [朝阳公园(3)]
+            '枣营': { lat: 39.9441, lng: 116.4749 },
+            '东风北桥': { lat: 39.9583, lng: 116.4859 },
+            '将台': { lat: 39.9711, lng: 116.4901 },
+            '望京南': { lat: 39.9846, lng: 116.4816 },
+            '阜通': { lat: 39.9917, lng: 116.4717 },
+            '望京': { lat: 39.9987146144, lng: 116.4697873592 },
+            '东湖渠': { lat: 40.0106, lng: 116.4673 },
+            '来广营': { lat: 40.0206, lng: 116.4670 },
+            '善各庄': { lat: 40.0271, lng: 116.4780 },
+
+            // 15号线
+            '俸伯': { lat: 40.1325679642, lng: 116.6849541664 },
+            '顺义': { lat: 40.1302465359, lng: 116.6568553448 },
+            '石门': { lat: 40.1298445844, lng: 116.6413360834 },
+            '南法信': { lat: 40.1283926174, lng: 116.6094338894 },
+            '后沙峪': { lat: 40.1140845728, lng: 116.5642333031 },
+            '花梨坎': { lat: 40.0843923417, lng: 116.5576457977 },
+            '国展': { lat: 40.0701407233, lng: 116.5551674366 },
+            '孙河': { lat: 40.0451275079, lng: 116.5346109867 },
+            '马泉营': { lat: 40.0337675249, lng: 116.5038192272 },
+            '崔各庄': { lat: 40.0222084635, lng: 116.4929187298 },
+            // [望京(14)]
+            // [望京西(13)]
+            '关庄': { lat: 40.0011, lng: 116.4309 },
+            // [大屯路东(5)]
+            '安立路': { lat: 40.0026, lng: 116.4078 },
+            // [奥林匹克公园(8)]
+            '北沙滩': { lat: 40.0015, lng: 116.3681 },
+            '六道口': { lat: 40.0009, lng: 116.3526 },
+            '清华东路西口': { lat: 40.0006, lng: 116.3396 },
+
+            // 16号线
+            '北安河': { lat: 40.0680, lng: 116.1303 },
+            '温阳路': { lat: 40.0685, lng: 116.1613 },
+            '稻香湖路': { lat: 40.0689, lng: 116.1882 },
+            '屯佃': { lat: 40.0684, lng: 116.2158 },
+            '永丰': { lat: 40.0719, lng: 116.2386 },
+            '永丰南': { lat: 40.0655, lng: 116.2481 },
+            '西北旺': { lat: 40.0487, lng: 116.2579 },
+            '马连洼': { lat: 40.0326, lng: 116.2725 },
+            '农大南路': { lat: 40.0214, lng: 116.2822 },
+            // [西苑(4)]
+            '万泉河桥': { lat: 39.9852, lng: 116.2990 },
+            // [苏州街(10)]
+            // [苏州桥(12)]
+            '万寿寺': { lat: 39.9477, lng: 116.3098 },
+            // [国家图书馆(4,9)]
+            // [二里沟(6)]
+            '甘家口': { lat: 39.9234, lng: 116.3345 },
+            '玉渊潭东门': { lat: 39.9141, lng: 116.3345 },
+            // [木樨地(1)]
+            // [达官营(7)]
+            '红莲南路': { lat: 39.8772, lng: 116.3367 },
+            // [丽泽商务区(14)]
+            '东管头南': { lat: 39.8546, lng: 116.3230 },
+            // [丰台站(10)]
+            // [丰台南路(9)]
+            '富丰桥': { lat: 39.8362, lng: 116.2870 },
+            '看丹': { lat: 39.8348, lng: 116.2725 },
+            '榆树庄': { lat: 39.8386, lng: 116.2589 },
+            '洪泰庄': { lat: 39.8485, lng: 116.2493 },
+            '宛平城': { lat: 39.8490, lng: 116.2295 },
+
+            // 17号线
+            '未来科学城北': { lat: 40.1302, lng: 116.4686 },
+            '未来科学城': { lat: 40.1156, lng: 116.4668 },
+            '天通苑东': { lat: 40.0684, lng: 116.4423 },
+            '清河营': { lat: 40.0507, lng: 116.4421 },
+            '红军营': { lat: 40.0336, lng: 116.4418 },
+            // [太阳宫(10)]
+            // [西坝河(12)]
+            '左家庄': { lat: 39.9499, lng: 116.4427 },
+            // [工人体育场(3)]
+            // [东大桥(6)]
+            // [永安里(1)]
+            '潘家园西': { lat: 39.8749, lng: 116.4508 },
+            // [十里河(10,14)]
+            '周家庄': { lat: 39.8567, lng: 116.4763 },
+            '十八里店': { lat: 39.8442, lng: 116.4959 },
+            '北神树': { lat: 39.8186, lng: 116.5527 },
+            '次渠北': { lat: 39.8094, lng: 116.5766 },
+            '次渠': { lat: 39.8035, lng: 116.5915 },
+            '嘉会湖': { lat: 39.7929, lng: 116.6103 },
+
+            // 18号线
+            // [马连洼(16)]
+            '上地软件园': { lat: 40.0439, lng: 116.2869 },
+            '东北旺': { lat: 40.0532, lng: 116.2951 },
+            '龙泽西': { lat: 40.0727, lng: 116.3104 },
+            '回龙观西大街': { lat: 40.0782, lng: 116.3300 },
+            '文华路': { lat: 40.0803, lng: 116.3427 },
+            // [回龙观东大街(8)]
+            '霍营东': { lat: 40.0821, lng: 116.3761 },
+            // [天通苑(5)]
+            '太平庄': { lat: 40.0741, lng: 116.4270 },
+            // [天通苑东(17)]
+
+            // 19号线
+            // [新宫(DAX)]
+            '新发地': { lat: 39.8234, lng: 116.3462 },
+            // [草桥(10,PKX)]
+            // [景风门(14)]
+            '牛街': { lat: 39.8906, lng: 116.3634 },
+            '太平桥': { lat: 39.9094, lng: 116.3632 },
+            // [平安里(4,6)]
+            // [积水潭(2)]
+            // [北太平庄(12)]
+            // [牡丹园(10)]
+
+            // 房山线
+            // [东管头南(16)]
+            // [首经贸(10)]
+            '花乡东桥': { lat: 39.8288, lng: 116.3203 },
+            '白盆窑': { lat: 39.8196, lng: 116.3134 },
+            // [郭公庄(9)]
+            '大葆台': { lat: 39.8077, lng: 116.2916 },
+            '稻田': { lat: 39.7948, lng: 116.2188 },
+            '长阳': { lat: 39.7638, lng: 116.2126 },
+            '篱笆房': { lat: 39.7607, lng: 116.1894 },
+            '广阳城': { lat: 39.7478, lng: 116.1849 },
+            '良乡大学城北': { lat: 39.7299, lng: 116.1834 },
+            '良乡大学城': { lat: 39.7232, lng: 116.1764 },
+            '良乡大学城西': { lat: 39.7231, lng: 116.1562 },
+            '良乡南关': { lat: 39.7232, lng: 116.1407 },
+            '苏庄': { lat: 39.7232, lng: 116.1249 },
+            '阎村东': { lat: 39.7290, lng: 116.1008 },
+            
+            // 昌平线
+            '昌平西山口': { lat: 40.2446, lng: 116.1953 },
+            '十三陵景区': { lat: 40.2402, lng: 116.2076 },
+            '昌平': { lat: 40.2205, lng: 116.2335 },
+            '昌平东关': { lat: 40.2217, lng: 116.2619 },
+            '北邵洼': { lat: 40.2219, lng: 116.2818 },
+            '南邵': { lat: 40.2075, lng: 116.2875 },
+            '沙河高教园': { lat: 40.1649, lng: 116.2804 },
+            '沙河': { lat: 40.1485, lng: 116.2886 },
+            '巩华城': { lat: 40.1312, lng: 116.2940 },
+            // [朱辛庄(8)]
+            '生命科学园': { lat: 40.0948, lng: 116.2941 },
+            // [西二旗(13)]
+            // [清河站(13)]
+            '朱房北': { lat: 40.0359, lng: 116.3319 },
+            '清河小营桥': { lat: 40.0345, lng: 116.3437 },
+            '学知园': { lat: 40.0149, lng: 116.3521 },
+            // [六道口(15)]
+            '学院桥': { lat: 39.9876, lng: 116.3534 },
+            // [西土城(10)]
+            // [蓟门桥(12)]
+            
+            // 亦庄线
+            // [宋家庄(5,10)]
+            '肖村': { lat: 39.8342, lng: 116.4483 },
+            '小红门': { lat: 39.8279, lng: 116.4592 },
+            '旧宫': { lat: 39.8069, lng: 116.4608 },
+            '亦庄桥': { lat: 39.8030, lng: 116.4803 },
+            '亦庄文化园': { lat: 39.8068, lng: 116.4906 },
+            '万源街': { lat: 39.8029, lng: 116.5054 },
+            '荣京东街': { lat: 39.7931, lng: 116.5133 },
+            '荣昌东街': { lat: 39.7827, lng: 116.5217 },
+            '同济南路': { lat: 39.7729, lng: 116.5398 },
+            '经海路': { lat: 39.7836, lng: 116.5624 },
+            '次渠南': { lat: 39.7951, lng: 116.5813 },
+            // [次渠(17)]
+            '亦庄火车站': { lat: 39.8125, lng: 116.6019 },
+            
+            // 燕房线
+            // [阎村东(25)]
+            '紫草坞': { lat: 39.7246, lng: 116.0867 },
+            '阎村': { lat: 39.7167, lng: 116.0801 },
+            '星城': { lat: 39.7136, lng: 116.0613 },
+            '大石河东': { lat: 39.7098, lng: 116.0398 },
+            '马各庄': { lat: 39.7050, lng: 116.0165 },
+            '饶乐府': { lat: 39.7014, lng: 116.0061 },
+            '房山城关': { lat: 39.7060, lng: 115.9895 },
+            '燕山': { lat: 39.7195, lng: 115.9734 },
+            
+            // S1线
+            // [苹果园(6)]
+            // [金安桥(6,11)]
+            '四道桥': { lat: 39.9160, lng: 116.1340 },
+            '桥户营': { lat: 39.9123, lng: 116.1258 },
+            '上岸': { lat: 39.9051, lng: 116.1222 },
+            '栗园庄': { lat: 39.8957, lng: 116.1232 },
+            '小园': { lat: 39.8904, lng: 116.1144 },
+            '石厂': { lat: 39.8893, lng: 116.1003 },
+            
+            // 西郊线
+            // [巴沟(10)]
+            '颐和园西门': { lat: 39.9857, lng: 116.2632 },
+            '茶棚': { lat: 39.9821, lng: 116.2480 },
+            '万安': { lat: 39.9839, lng: 116.2319 },
+            '国家植物园': { lat: 39.9935, lng: 116.2157 },
+            '香山': { lat: 39.9940, lng: 116.2045 },
+            
+            // 亦庄T1线
+            '定海园': { lat: 39.8010, lng: 116.5620 },
+            '定海园西': { lat: 39.7960, lng: 116.5516 },
+            '经海一路': { lat: 39.7908, lng: 116.5409 },
+            '亦创会展中心': { lat: 39.7842, lng: 116.5272 },
+            // [荣昌东街(YIZ)]
+            '亦庄同仁': { lat: 39.7768, lng: 116.5182 },
+            '鹿圈东': { lat: 39.7662, lng: 116.5138 },
+            '泰和路': { lat: 39.7600, lng: 116.5122 },
+            '九号村': { lat: 39.7549, lng: 116.5086 },
+            '四海庄': { lat: 39.7466, lng: 116.5045 },
+            '太和桥北': { lat: 39.7411, lng: 116.5018 },
+            '瑞合庄': { lat: 39.7288, lng: 116.5036 },
+            '融兴街': { lat: 39.7219, lng: 116.5054 },
+            '屈庄': { lat: 39.7148, lng: 116.5072 },
+            
+            // 首都机场线
+            // [北新桥(5)]
+            // [东直门(2,13)]
+            // [三元桥(10,12)]
+            '3号航站楼': { lat: 40.0529, lng: 116.6155 },
+            '2号航站楼': { lat: 40.0792, lng: 116.5928 },
+            
+            // 大兴机场线
+            // [草桥(10,19)]
+            '大兴新城': { lat: 39.7355, lng: 116.3655 },
+            '大兴机场': { lat: 39.5132, lng: 116.4165 }
+        };
+
+        // 定义线路连接顺序
+        const lineConnections = {
+            // 1-八通-2-3-4-大兴-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-房山-昌平-亦庄-燕房-S1-西郊-亦庄T1-首都机场-大兴机场
+            '1号线': ['古城', '八宝山', '玉泉路', '五棵松', '万寿路', '公主坟', '军事博物馆', '木樨地', '南礼士路', '复兴门', '西单', '天安门西', '天安门东', '王府井', '东单', '建国门', '永安里', '国贸', '大望路', '四惠', '四惠东'],
+            '八通线': ['四惠', '四惠东', '高碑店', '传媒大学', '双桥', '管庄', '八里桥', '通州北苑', '果园', '九棵树', '梨园', '临河里', '土桥', '花庄', '环球度假区'],
+            '2号线': ['西直门', '车公庄', '阜成门', '复兴门', '长椿街', '宣武门', '和平门', '前门', '崇文门', '北京站', '建国门', '朝阳门', '东四十条', '东直门', '雍和宫', '安定门', '鼓楼大街', '积水潭', '西直门'],
+            '3号线': ['东四十条', '工人体育场', '团结湖', '朝阳公园', '石佛营', '朝阳站', '姚家园', '东坝南', '东坝', '东坝北'],
+            '4号线': ['安河桥北', '北宫门', '西苑', '圆明园', '北京大学东门', '中关村', '海淀黄庄', '人民大学', '魏公村', '国家图书馆', '动物园', '西直门', '新街口', '平安里', '西四', '灵境胡同', '西单', '宣武门', '菜市口', '陶然亭', '北京南站', '马家堡', '公益西桥'],
+            '大兴线': ['天宫院', '生物医药基地', '义和庄', '黄村火车站', '黄村西大街', '清源路', '枣园', '高米店南', '高米店北', '西红门', '新宫', '公益西桥'],
+            '5号线': ['宋家庄', '刘家窑', '蒲黄榆', '天坛东门', '磁器口', '崇文门', '东单', '灯市口', '东四', '张自忠路', '北新桥', '雍和宫', '和平里北街', '和平西桥', '惠新西街南口', '惠新西街北口', '大屯路东', '北苑路北', '立水桥南', '立水桥', '天通苑南', '天通苑', '天通苑北'],
+            '6号线': ['金安桥', '苹果园', '杨庄', '西黄村', '廖公庄', '田村', '海淀五路居', '慈寿寺', '花园桥', '白石桥南', '二里沟', '车公庄西', '车公庄', '平安里', '北海北', '南锣鼓巷', '东四', '朝阳门', '东大桥', '呼家楼', '金台路', '十里堡', '青年路', '褡裢坡', '黄渠', '常营', '草房', '物资学院路', '通州北关', '北运河西', '北运河东', '郝家府', '东夏园', '潞城', '潞阳'],
+            '7号线': ['北京西站', '湾子', '达官营', '广安门内', '菜市口', '虎坊桥', '珠市口', '桥湾', '磁器口', '广渠门内', '广渠门外', '双井', '九龙山', '大郊亭', '百子湾', '化工', '南楼梓庄', '欢乐谷景区', '垡头', '双合', '焦化厂', '黄厂', '郎辛庄', '黑庄户', '万盛西', '万盛东', '群芳', '高楼金', '花庄', '环球度假区'],
+            '8号线': ['朱辛庄', '育知路', '平西府', '回龙观东大街', '霍营', '育新', '西小口', '永泰庄', '林萃桥', '森林公园南门', '奥林匹克公园', '奥体中心', '北土城', '安华桥', '安德里北街', '鼓楼大街', '什刹海', '南锣鼓巷', '中国美术馆', '金鱼胡同', '王府井', '前门', '珠市口', '天桥', '永定门外', '木樨园', '海户屯', '大红门南', '和义', '东高地', '火箭万源', '五福堂', '德茂', '瀛海'],
+            '9号线': ['郭公庄', '丰台科技园', '科怡路', '丰台南路', '丰台东大街', '七里庄', '六里桥', '六里桥东', '北京西站', '军事博物馆', '白堆子', '白石桥南', '国家图书馆'],
+            '10号线': ['巴沟', '苏州街', '海淀黄庄', '知春里', '知春路', '西土城', '牡丹园', '健德门', '北土城', '安贞门', '惠新西街南口', '芍药居', '太阳宫', '三元桥', '亮马桥', '农业展览馆', '团结湖', '呼家楼', '金台夕照', '国贸', '双井', '劲松', '潘家园', '十里河', '分钟寺', '成寿寺', '宋家庄', '石榴庄', '大红门', '角门东', '角门西', '草桥', '纪家庙', '首经贸', '丰台站', '泥洼', '西局', '六里桥', '莲花桥', '公主坟', '西钓鱼台', '慈寿寺', '车道沟', '长春桥', '火器营', '巴沟'],
+            '11号线': ['新首钢', '北辛安', '金安桥', '模式口'],
+            '12号线': ['四季青桥', '蓝靛厂', '长春桥', '苏州桥', '人民大学', '大钟寺', '蓟门桥', '北太平庄', '马甸桥', '安华桥', '安贞桥', '和平西桥', '光熙门', '西坝河', '三元桥', '将台西', '高家园', '驼房营', '东坝西', '东坝北'],
+            '13号线': ['西直门', '大钟寺', '知春路', '五道口', '上地', '清河站', '西二旗', '龙泽', '回龙观', '霍营', '立水桥', '北苑', '望京西', '芍药居', '光熙门', '柳芳', '东直门'],
+            '14号线': ['张郭庄', '园博园', '大瓦窑', '郭庄子', '大井', '七里庄', '西局', '东管头', '丽泽商务区', '菜户营', '西铁营', '景风门', '北京南站', '永定门外', '景泰', '蒲黄榆', '方庄', '十里河', '北工大西门', '平乐园', '九龙山', '大望路', '金台路', '朝阳公园', '枣营', '东风北桥', '将台', '望京南', '阜通', '望京', '东湖渠', '来广营', '善各庄'],
+            '15号线': ['俸伯', '顺义', '石门', '南法信', '后沙峪', '花梨坎', '国展', '孙河', '马泉营', '崔各庄', '望京', '望京西', '关庄', '大屯路东', '安立路', '奥林匹克公园', '北沙滩', '六道口', '清华东路西口'],
+            '16号线': ['北安河', '温阳路', '稻香湖路', '屯佃', '永丰', '永丰南', '西北旺', '马连洼', '农大南路', '西苑', '万泉河桥', '苏州街', '苏州桥', '万寿寺', '国家图书馆', '二里沟', '甘家口', '玉渊潭东门', '木樨地', '达官营', '红莲南路', '丽泽商务区', '东管头南', '丰台站', '丰台南路', '富丰桥', '看丹', '榆树庄', '洪泰庄', '宛平城'],
+            '17号线': ['未来科学城北', '未来科学城', '天通苑东', '清河营', '红军营', '太阳宫', '西坝河', '左家庄', '工人体育场', '东大桥', '永安里', '潘家园西', '十里河', '周家庄', '十八里店', '北神树', '次渠北', '次渠', '嘉会湖'],
+            '18号线': ['马连洼', '上地软件园', '东北旺', '龙泽西', '回龙观西大街', '文华路', '回龙观东大街', '霍营东', '天通苑', '太平庄', '天通苑东'],
+            '19号线': ['新宫', '新发地', '草桥', '景风门', '牛街', '太平桥', '平安里', '积水潭', '北太平庄', '牡丹园'],
+            '房山线': ['东管头南', '首经贸', '花乡东桥', '白盆窑', '郭公庄', '大葆台', '稻田', '长阳', '篱笆房', '广阳城', '良乡大学城北', '良乡大学城', '良乡大学城西', '良乡南关', '苏庄', '阎村东'],
+            '昌平线': ['昌平西山口', '十三陵景区', '昌平', '昌平东关', '北邵洼', '南邵', '沙河高教园', '沙河', '巩华城', '朱辛庄', '生命科学园', '西二旗', '清河站', '朱房北', '清河小营桥', '学知园', '六道口', '学院桥', '西土城', '蓟门桥'],
+            '亦庄线': ['宋家庄', '肖村', '小红门', '旧宫', '亦庄桥', '亦庄文化园', '万源街', '荣京东街', '荣昌东街', '同济南路', '经海路', '次渠南', '次渠', '亦庄火车站'],
+            '燕房线': ['阎村东', '紫草坞', '阎村', '星城', '大石河东', '马各庄', '饶乐府', '房山城关', '燕山'],
+            'S1线': ['苹果园', '金安桥', '四道桥', '桥户营', '上岸', '栗园庄', '小园', '石厂'],
+            '西郊线': ['巴沟', '颐和园西门', '茶棚', '万安', '国家植物园', '香山'],
+            '亦庄T1线': ['定海园', '定海园西', '经海一路', '亦创会展中心', '荣昌东街', '亦庄同仁', '鹿圈东', '泰和路', '九号村', '四海庄', '太和桥北', '瑞合庄', '融兴街', '屈庄'],
+            '首都机场线': ['北新桥', '东直门', '三元桥', '3号航站楼', '2号航站楼'],
+            '大兴机场线': ['草桥', '大兴新城', '大兴机场']
+        };
+
+        // 创建LayerGroup来管理站点标记和标签
+        const stationPointsGroup = L.layerGroup();
+        const stationLabelsGroup = L.layerGroup();
+        
+        // 创建线路LayerGroup字典，用于管理每条线路
+        const lineLayers = {};
+        
+        // 保存每条线路的荧光线路和主线路引用
+        const linePolylineRefs = {};
+        
+        // 创建站点所属线路映射关系，用于快速查找站点对应的线路
+        const stationToLines = {};
+        
+        // 构建站点到线路的映射
+        Object.keys(lineConnections).forEach(lineName => {
+            const stationNames = lineConnections[lineName];
+            stationNames.forEach(stationName => {
+                if (!stationToLines[stationName]) {
+                    stationToLines[stationName] = [];
+                }
+                if (!stationToLines[stationName].includes(lineName)) {
+                    stationToLines[stationName].push(lineName);
+                }
+            });
+        });
+        
+        // 线路排序函数
+        function sortLines(lineNames) {
+            return lineNames.sort((a, b) => {
+                // 提取线路编号
+                const getLineNumber = (lineName) => {
+                    const matchA = lineName.match(/^(\d+)号线$/);
+                    return matchA ? parseInt(matchA[1]) : Infinity;
+                };
+                
+                const numA = getLineNumber(a);
+                const numB = getLineNumber(b);
+                
+                // 按数字大小排序
+                if (numA !== numB) {
+                    return numA - numB;
+                }
+                // 数字相同或都是非数字线路，按名称排序
+                return a.localeCompare(b);
+            });
+        }
+        
+        // 绘制线路和站点
+        Object.keys(lineConnections).forEach(lineName => {
+            const color = lineColors[lineName] || '#000';
+            const stationNames = lineConnections[lineName];
+            
+            // 创建线路坐标数组
+            const lineCoords = stationNames.map(stationName => {
+                const station = allStations[stationName];
+                return station ? [station.lat, station.lng] : null;
+            }).filter(coord => coord !== null);
+
+            // 创建线路LayerGroup
+            const lineLayer = L.layerGroup();
+            lineLayers[lineName] = lineLayer;
+            
+            // 绘制主线路
+            if (lineCoords.length > 1) {
+                // 绘制荧光黄色背景线路（高亮效果）- 初始隐藏
+                const highlightLine = L.polyline(lineCoords, {
+                    color: '#FFFF00', // 荧光黄色
+                    weight: 25,
+                    opacity: 0, // 初始隐藏
+                    zIndexOffset: -1,
+                    interactive: false,
+                    pointerEvents: 'none'
+                }).addTo(lineLayer);
+                
+                // 绘制主线路
+                const mainLine = L.polyline(lineCoords, {
+                    color: color,
+                    weight: 4,
+                    opacity: 1,
+                    zIndexOffset: 0,
+                    interactive: false,
+                    pointerEvents: 'none'
+                }).addTo(lineLayer);
+                
+                // 保存线路引用
+                linePolylineRefs[lineName] = {
+                    highlightLine: highlightLine,
+                    mainLine: mainLine
+                };
+                
+                // 添加到地图
+                lineLayer.addTo(map);
+            }
+
+            // 添加站点标记和标签
+            stationNames.forEach(stationName => {
+                const station = allStations[stationName];
+                if (station) {
+                    // 创建站点标记
+                    const stationMarker = L.circleMarker([station.lat, station.lng], {
+                        radius: 4,
+                        fillColor: '#999',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 1,
+                        cursor: 'default'
+                    });
+                    
+                    // 添加点击事件 - 显示站点信息悬浮窗口
+                    stationMarker.addEventListener('click', function(e) {
+                        // 获取站点名称
+                        const currentStationName = stationName;
+                        
+                        // 检查是否点击了同一个站点且已有悬浮窗打开
+                        if (currentPopup && currentPopupStation === currentStationName) {
+                            // 关闭当前悬浮窗
+                            map.closePopup(currentPopup);
+                            currentPopup = null;
+                            currentPopupStation = null;
+                            return;
+                        }
+                        
+                        // 获取站点所属线路
+                        const lines = stationToLines[currentStationName] || [];
+                        
+                        // 排序线路
+                        const sortedLines = sortLines(lines);
+                        
+                        // 创建悬浮窗口内容
+                        const popupContentParts = [
+                            `<div class="station-popup-content">
+                                <h3 class="station-popup-title">${currentStationName}</h3>
+                                <div class="station-popup-lines">`
+                        ];
+                        
+                        // 添加线路按钮
+                        sortedLines.forEach(lineName => {
+                            const lineColor = lineColors[lineName] || '#000';
+                            const isHighlighted = lineHighlightStates[lineName] || false;
+                            
+                            popupContentParts.push(
+                                `<div class="station-popup-line" 
+                                     data-line="${lineName}" 
+                                     data-active="${isHighlighted}">
+                                    <span class="line-color" style="background-color: ${lineColor};"></span>
+                                    <span class="line-name">${lineName}</span>
+                                </div>`
+                            );
+                        });
+                        
+                        popupContentParts.push(
+                            `</div>
+                            </div>`
+                        );
+                        
+                        // 合并数组生成最终HTML
+                        const popupContent = popupContentParts.join('');
+                        
+                        // 关闭之前的悬浮窗
+                        if (currentPopup) {
+                            map.closePopup(currentPopup);
+                        }
+                        
+                        // 创建并显示悬浮窗口
+                        const popup = L.popup({
+                            maxWidth: 300,
+                            minWidth: 150,
+                            closeButton: true,
+                            offset: L.point(0, -5)
+                        })
+                        .setLatLng(e.latlng)
+                        .setContent(popupContent)
+                        .openOn(map);
+                        
+                        // 保存当前悬浮窗状态
+                        currentPopup = popup;
+                        currentPopupStation = currentStationName;
+                        
+                        // 监听悬浮窗关闭事件，重置状态
+                        popup.on('close', function() {
+                            currentPopup = null;
+                            currentPopupStation = null;
+                        });
+                        
+                        // 为悬浮窗口添加事件委托，处理线路按钮点击
+                        setTimeout(() => {
+                            const popup = map._popup;
+                            if (popup) {
+                                const popupContent = popup._contentNode;
+                                popupContent.addEventListener('click', function(e) {
+                                    const lineButton = e.target.closest('.station-popup-line');
+                                    if (lineButton) {
+                                        const lineName = lineButton.dataset.line;
+                                        // 调用线路高亮函数
+                                        handleLegendItemClick(lineName);
+                                    }
+                                });
+                            }
+                        }, 100);
+                    });
+                    
+                    // 添加到站点标记LayerGroup
+                    stationMarker.addTo(stationPointsGroup);
+
+                    // 添加站点标签
+                    const labelMarker = L.marker([station.lat, station.lng], {
+                        icon: L.divIcon({
+                            className: 'station-label',
+                            html: stationName,
+                            iconSize: null, // 让Leaflet自动计算大小
+                            iconAnchor: [-5, -2],
+                            popupAnchor: [0, 0]
+                        })
+                    });
+                    
+                    // 添加到站点标签LayerGroup
+                    labelMarker.addTo(stationLabelsGroup);
+                }
+            });
+        });
+        
+        // 初始化开关状态
+        const showStationPointsCheckbox = document.getElementById('showStationPoints');
+        const showStationNamesCheckbox = document.getElementById('showStationNames');
+        const showLegendCheckbox = document.getElementById('showLegend');
+        const maskOpacitySlider = document.getElementById('maskOpacity');
+        const opacityValueDisplay = document.getElementById('opacityValue');
+        const bgColorPicker = document.getElementById('bgColorPicker');
+        const mapContainer = document.getElementById('map');
+        const legend = document.getElementById('legend');
+        
+        // 从localStorage获取保存的状态，设置默认值
+        let showStationPoints = localStorage.getItem('showStationPoints') !== 'false'; // 默认为true（显示站点）
+        let showStationNames = localStorage.getItem('showStationNames') === 'true'; // 默认为false（显示站名）
+        let showLegend = localStorage.getItem('showLegend') === 'true'; // 默认为false（显示图例）
+        let maskOpacity = parseInt(localStorage.getItem('maskOpacity') || '100'); // 默认为100%（底图不透明度）
+        let bgColor = localStorage.getItem('bgColor') || '#ffffff'; // 默认为白色
+        
+        // 当显示站点关闭时，显示站名自动关闭
+        if (!showStationPoints) {
+            showStationNames = false;
+        }
+        
+        showStationPointsCheckbox.checked = showStationPoints;
+        showStationNamesCheckbox.checked = showStationNames;
+        showLegendCheckbox.checked = showLegend;
+        maskOpacitySlider.value = maskOpacity;
+        opacityValueDisplay.textContent = maskOpacity + '%';
+        bgColorPicker.value = bgColor;
+        
+        // 初始设置地图容器背景颜色
+        mapContainer.style.backgroundColor = bgColor;
+        
+        // 更新显示站名开关的状态
+        function updateStationNamesCheckbox() {
+            if (showStationPoints) {
+                // 启用显示站名开关
+                showStationNamesCheckbox.disabled = false;
+                showStationNamesCheckbox.parentElement.parentElement.style.opacity = '1';
+            } else {
+                // 禁用显示站名开关
+                showStationNamesCheckbox.disabled = true;
+                showStationNamesCheckbox.checked = false;
+                showStationNames = false;
+                showStationNamesCheckbox.parentElement.parentElement.style.opacity = '0.5';
+            }
+        }
+        
+        // 调整底图不透明度的函数
+        function adjustBaseOpacity(opacity) {
+            // 更新当前底图不透明度状态
+            maskOpacity = opacity;
+            
+            // 调整底图透明度
+            baseOpacity = opacity / 100;
+            currentBaseLayer.setOpacity(baseOpacity);
+            
+            // 更新显示值
+            opacityValueDisplay.textContent = opacity + '%';
+        }
+        
+        // 切换车站点显示/隐藏的函数
+        function toggleStationPoints(show) {
+            // 更新当前显示车站点状态
+            showStationPoints = show;
+            
+            // 显示/隐藏车站点LayerGroup
+            if (show) {
+                stationPointsGroup.addTo(map);
+                // 如果显示站点且显示站名开关开启，显示站名
+                if (showStationNames) {
+                    stationLabelsGroup.addTo(map);
+                }
+            } else {
+                map.removeLayer(stationPointsGroup);
+                map.removeLayer(stationLabelsGroup);
+            }
+            
+            // 更新显示站名开关状态
+            updateStationNamesCheckbox();
+        }
+        
+        // 切换站名显示/隐藏的函数
+        function toggleStationNames(show) {
+            // 更新当前显示站名状态
+            showStationNames = show;
+            
+            // 只有当显示站点开启时，才控制站名显示
+            if (showStationPoints) {
+                if (show) {
+                    stationLabelsGroup.addTo(map);
+                } else {
+                    map.removeLayer(stationLabelsGroup);
+                }
+            }
+        }
+        
+        // 切换图例显示/隐藏的函数
+        function toggleLegend(show) {
+            // 更新当前显示图例状态
+            showLegend = show;
+            
+            // 显示/隐藏图例
+            if (legend) {
+                legend.style.display = show ? 'block' : 'none';
+            }
+        }
+        
+        // 初始显示状态
+        adjustBaseOpacity(maskOpacity);
+        updateStationNamesCheckbox();
+        toggleStationPoints(showStationPoints);
+        toggleLegend(showLegend);
+        
+        // 线路高光状态字典
+        const lineHighlightStates = {};
+        
+        // 当前打开的悬浮窗和对应的站点
+        let currentPopup = null;
+        let currentPopupStation = null;
+        
+        // 图例点击事件处理 - 切换荧光线路显示/隐藏
+        function handleLegendItemClick(lineName) {
+            // 使用保存的线路引用
+            const lineRefs = linePolylineRefs[lineName];
+            if (!lineRefs) return;
+            
+            const highlightLine = lineRefs.highlightLine;
+            const mainLine = lineRefs.mainLine;
+            
+            // 切换荧光线路显示/隐藏
+            const currentOpacity = highlightLine.options.opacity;
+            const newOpacity = currentOpacity > 0 ? 0 : 0.8;
+            highlightLine.setStyle({
+                opacity: newOpacity,
+                weight: 25
+            });
+            
+            mainLine.setStyle({
+                opacity: 1,
+                weight: 4
+            });
+            
+            // 更新线路高光状态
+            const isHighlighted = newOpacity > 0;
+            lineHighlightStates[lineName] = isHighlighted;
+            
+            // 更新所有相关图例项和悬浮窗口按钮的状态
+            updateUIElementsForLine(lineName, isHighlighted);
+        }
+        
+        // 更新UI元素状态（图例项和悬浮窗口按钮）
+        function updateUIElementsForLine(lineName, isHighlighted) {
+            // 更新图例项状态
+            const legendItems = document.querySelectorAll('.legend-item');
+            legendItems.forEach(item => {
+                const itemLineName = item.querySelector('.legend-text').textContent;
+                if (itemLineName === lineName) {
+                    if (isHighlighted) {
+                        // 激活状态 - 颜色变深
+                        item.style.backgroundColor = 'rgba(0, 0, 0, 0.05)';
+                        item.dataset.active = 'true';
+                    } else {
+                        // 恢复原状
+                        item.style.backgroundColor = 'transparent';
+                        item.dataset.active = 'false';
+                    }
+                }
+            });
+            
+            // 更新所有悬浮窗口中的线路按钮状态
+            const popupLineButtons = document.querySelectorAll('.station-popup-line');
+            popupLineButtons.forEach(btn => {
+                if (btn.dataset.line === lineName) {
+                    if (isHighlighted) {
+                        // 激活状态 - 颜色变深
+                        btn.style.backgroundColor = '#f0f0f0';
+                        btn.dataset.active = 'true';
+                    } else {
+                        // 恢复原状
+                        btn.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+                        btn.dataset.active = 'false';
+                    }
+                }
+            });
+        }
+        
+        // 为所有图例项添加点击事件
+        const legendItems = document.querySelectorAll('.legend-item');
+        legendItems.forEach(item => {
+            const lineName = item.querySelector('.legend-text').textContent;
+            item.addEventListener('click', () => {
+                // 直接调用线路高亮函数，状态由高光是否显示决定
+                handleLegendItemClick(lineName);
+            });
+        });
+        
+        // 显示站点开关事件
+        showStationPointsCheckbox.addEventListener('change', function() {
+            const show = this.checked;
+            toggleStationPoints(show);
+            // 保存状态到localStorage
+            localStorage.setItem('showStationPoints', show);
+        });
+        
+        // 显示站名开关事件
+        showStationNamesCheckbox.addEventListener('change', function() {
+            const show = this.checked;
+            toggleStationNames(show);
+            // 保存状态到localStorage
+            localStorage.setItem('showStationNames', show);
+        });
+        
+        // 显示图例开关事件
+        showLegendCheckbox.addEventListener('change', function() {
+            const show = this.checked;
+            toggleLegend(show);
+            // 保存状态到localStorage
+            localStorage.setItem('showLegend', show);
+        });
+        
+        // 底图不透明度滑块事件
+        maskOpacitySlider.addEventListener('input', function() {
+            const opacity = parseInt(this.value);
+            adjustBaseOpacity(opacity);
+            // 保存状态到localStorage
+            localStorage.setItem('maskOpacity', opacity);
+        });
+        
+        // 背景颜色选择器事件
+        bgColorPicker.addEventListener('input', function() {
+            bgColor = this.value;
+            // 更新地图容器背景颜色
+            mapContainer.style.backgroundColor = bgColor;
+            // 保存状态到localStorage
+            localStorage.setItem('bgColor', bgColor);
+        });
+        
+        // 自定义下拉菜单逻辑
+        const dropdownToggle = document.getElementById('mapSourceToggle');
+        const dropdownMenu = document.getElementById('mapSourceMenu');
+        const selectedText = dropdownToggle.querySelector('.selected-text');
+        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+        
+        // 切换下拉菜单显示/隐藏
+        dropdownToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+            dropdownToggle.classList.toggle('active');
+        });
+        
+        // 点击文档其他地方关闭下拉菜单
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('show');
+            dropdownToggle.classList.remove('active');
+        });
+        
+        // 点击下拉菜单项
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const selectedSource = this.dataset.value;
+                const sourceText = this.textContent;
+                
+                // 更新选中文本
+                selectedText.textContent = sourceText;
+                
+                // 移除当前底图
+                map.removeLayer(currentBaseLayer);
+                
+                // 添加新底图
+                currentBaseLayer = baseLayers[selectedSource];
+                currentBaseLayer.addTo(map);
+                
+                // 应用当前透明度设置
+                currentBaseLayer.setOpacity(baseOpacity);
+                
+                // 更新选中状态
+                dropdownItems.forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // 关闭下拉菜单
+                dropdownMenu.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            });
+        });
+        
+        // 站点搜索功能
+        const stationSearchInput = document.getElementById('stationSearch');
+        const searchResultsContainer = document.getElementById('searchResults');
+        
+        // 路径查询功能
+        const startStation = document.getElementById('startStation');
+        const startStationResults = document.getElementById('startStationResults');
+        const endStation = document.getElementById('endStation');
+        const endStationResults = document.getElementById('endStationResults');
+        const searchRouteBtn = document.getElementById('searchRouteBtn');
+        const routeResult = document.getElementById('routeResult');
+        const routeSummary = document.getElementById('routeSummary');
+        const routeDetails = document.getElementById('routeDetails');
+        const clearRouteBtn = document.getElementById('clearRouteBtn');
+        
+        // 页面加载时清空搜索框
+        window.addEventListener('load', function() {
+            stationSearchInput.value = '';
+            searchResultsContainer.classList.remove('show');
+            // 清空路径查询输入框
+            startStation.value = '';
+            startStationResults.classList.remove('show');
+            endStation.value = '';
+            endStationResults.classList.remove('show');
+        });
+        
+        // 添加输入事件监听器
+        stationSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm.length === 0) {
+                searchResultsContainer.classList.remove('show');
+                return;
+            }
+            
+            // 模糊搜索站点
+            const filteredStations = Object.entries(allStations).filter(([stationName, station]) => {
+                return stationName.includes(searchTerm);
+            });
+            
+            // 显示搜索结果
+            if (filteredStations.length > 0) {
+                searchResultsContainer.innerHTML = '';
+                filteredStations.forEach(([stationName, station]) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = stationName;
+                    resultItem.dataset.stationName = stationName;
+                    resultItem.dataset.lat = station.lat;
+                    resultItem.dataset.lng = station.lng;
+                    
+                    // 添加点击事件
+                    resultItem.addEventListener('click', function() {
+                        const stationName = this.dataset.stationName;
+                        const lat = parseFloat(this.dataset.lat);
+                        const lng = parseFloat(this.dataset.lng);
+                        
+                        // 地图平移并缩放
+                        map.setView([lat, lng], 15);
+                        
+                        // 关闭搜索结果
+                        searchResultsContainer.classList.remove('show');
+                        stationSearchInput.value = '';
+                        
+                        // 触发站点点击事件，显示弹窗
+                        // 找到对应的站点标记并触发点击
+                        const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
+                            const latlng = layer.getLatLng();
+                            return latlng.lat === lat && latlng.lng === lng;
+                        });
+                        
+                        if (stationMarker) {
+                            // 添加延迟，让地图有足够时间平移到位
+                            setTimeout(function() {
+                                // 模拟点击事件
+                                stationMarker.fire('click', {
+                                    latlng: [lat, lng]
+                                });
+                            }, 300); // 300毫秒延迟
+                        }
+                    });
+                    
+                    searchResultsContainer.appendChild(resultItem);
+                });
+                
+                searchResultsContainer.classList.add('show');
+            } else {
+                searchResultsContainer.innerHTML = '<div class="no-results">无匹配站点</div>';
+                searchResultsContainer.classList.add('show');
+            }
+        });
+        
+        // 添加回车键事件监听器，支持完整站名直接回车定位
+        stationSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                const searchTerm = this.value.trim();
+                
+                // 检查是否为完整站点名称
+                if (allStations.hasOwnProperty(searchTerm)) {
+                    const station = allStations[searchTerm];
+                    const lat = station.lat;
+                    const lng = station.lng;
+                    
+                    // 地图平移并缩放
+                    map.setView([lat, lng], 15);
+                    
+                    // 关闭搜索结果
+                    searchResultsContainer.classList.remove('show');
+                    stationSearchInput.value = '';
+                    
+                    // 触发站点点击事件，显示弹窗
+                    // 找到对应的站点标记并触发点击
+                    const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
+                        const latlng = layer.getLatLng();
+                        return latlng.lat === lat && latlng.lng === lng;
+                    });
+                    
+                    if (stationMarker) {
+                        // 添加延迟，让地图有足够时间平移到位
+                        setTimeout(function() {
+                            // 模拟点击事件
+                            stationMarker.fire('click', {
+                                latlng: [lat, lng]
+                            });
+                        }, 300); // 300毫秒延迟
+                    }
+                }
+            }
+        });
+        
+        // 点击页面其他地方关闭搜索结果
+        document.addEventListener('click', function(e) {
+            if (!stationSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+                searchResultsContainer.classList.remove('show');
+            }
+            // 关闭起点搜索结果
+            if (!startStation.contains(e.target) && !startStationResults.contains(e.target)) {
+                startStationResults.classList.remove('show');
+            }
+            // 关闭终点搜索结果
+            if (!endStation.contains(e.target) && !endStationResults.contains(e.target)) {
+                endStationResults.classList.remove('show');
+            }
+        });
+        
+        // 为起点输入框添加搜索功能
+        startStation.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            if (searchTerm.length === 0) {
+                startStationResults.classList.remove('show');
+                return;
+            }
+            const filteredStations = Object.entries(allStations).filter(([stationName, station]) => {
+                return stationName.includes(searchTerm);
+            });
+            if (filteredStations.length > 0) {
+                startStationResults.innerHTML = '';
+                filteredStations.forEach(([stationName, station]) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = stationName;
+                    resultItem.dataset.stationName = stationName;
+                    resultItem.addEventListener('click', function() {
+                        startStation.value = this.dataset.stationName;
+                        startStationResults.classList.remove('show');
+                    });
+                    startStationResults.appendChild(resultItem);
+                });
+                startStationResults.classList.add('show');
+            } else {
+                startStationResults.innerHTML = '<div class="no-results">无匹配站点</div>';
+                startStationResults.classList.add('show');
+            }
+        });
+        
+        // 为终点输入框添加搜索功能
+        endStation.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            if (searchTerm.length === 0) {
+                endStationResults.classList.remove('show');
+                return;
+            }
+            const filteredStations = Object.entries(allStations).filter(([stationName, station]) => {
+                return stationName.includes(searchTerm);
+            });
+            if (filteredStations.length > 0) {
+                endStationResults.innerHTML = '';
+                filteredStations.forEach(([stationName, station]) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = stationName;
+                    resultItem.dataset.stationName = stationName;
+                    resultItem.addEventListener('click', function() {
+                        endStation.value = this.dataset.stationName;
+                        endStationResults.classList.remove('show');
+                    });
+                    endStationResults.appendChild(resultItem);
+                });
+                endStationResults.classList.add('show');
+            } else {
+                endStationResults.innerHTML = '<div class="no-results">无匹配站点</div>';
+                endStationResults.classList.add('show');
+            }
+        });
+        
+        // 为起点输入框添加回车事件
+        startStation.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const startValue = this.value.trim();
+                if (allStations[startValue]) {
+                    // 收起起点框的自动补全菜单
+                    startStationResults.classList.remove('show');
+                    // 如果输入的是完整站名，跳转到终点输入框
+                    endStation.focus();
+                }
+            }
+        });
+        
+        // 为终点输入框添加回车事件
+        endStation.addEventListener('keyup', function(e) {
+            if (e.key === 'Enter') {
+                const endValue = this.value.trim();
+                if (allStations[endValue]) {
+                    // 收起终点框的自动补全菜单
+                    endStationResults.classList.remove('show');
+                    // 如果输入的是完整站名，触发查询
+                    searchRouteBtn.click();
+                    // 取消选中终点输入框
+                    this.blur();
+                }
+            }
+        });
+        
+        // 构建图结构
+        function buildGraph() {
+            const graph = {};
+            // 为每个站点创建邻接表
+            Object.keys(allStations).forEach(stationName => {
+                graph[stationName] = [];
+            });
+            // 遍历所有线路，添加邻接关系
+            Object.keys(lineConnections).forEach(lineName => {
+                const stations = lineConnections[lineName];
+                for (let i = 0; i < stations.length - 1; i++) {
+                    const currentStation = stations[i];
+                    const nextStation = stations[i + 1];
+                    // 添加双向边
+                    if (!graph[currentStation].find(edge => edge.station === nextStation)) {
+                        graph[currentStation].push({ station: nextStation, line: lineName });
+                    }
+                    if (!graph[nextStation].find(edge => edge.station === currentStation)) {
+                        graph[nextStation].push({ station: currentStation, line: lineName });
+                    }
+                }
+            });
+            return graph;
+        }
+        
+        const graph = buildGraph();
+        
+        // BFS算法查找路径
+        function findRoute(start, end) {
+            if (!allStations[start] || !allStations[end]) {
+                return null;
+            }
+            
+            const visited = new Set();
+            const queue = [[start, [], null]]; // [当前站点, 路径, 上一条线路]
+            
+            while (queue.length > 0) {
+                const [current, path, lastLine] = queue.shift();
+                
+                if (visited.has(current)) {
+                    continue;
+                }
+                
+                visited.add(current);
+                const newPath = [...path, { station: current, line: lastLine }];
+                
+                if (current === end) {
+                    return newPath;
+                }
+                
+                // 遍历所有邻接站点
+                graph[current].forEach(edge => {
+                    if (!visited.has(edge.station)) {
+                        queue.push([edge.station, newPath, edge.line]);
+                    }
+                });
+            }
+            
+            return null;
+        }
+        
+        // 计算换乘次数
+        function countTransfers(route) {
+            let transfers = 0;
+            let currentLine = null;
+            
+            for (const step of route) {
+                if (step.line && step.line !== currentLine) {
+                    if (currentLine) {
+                        transfers++;
+                    }
+                    currentLine = step.line;
+                }
+            }
+            
+            return transfers;
+        }
+        
+        // 高亮路径
+        let routeLayerGroup = L.layerGroup();
+        let routeStationsGroup = L.layerGroup(); // 用于显示路径中经过的站点
+        
+        function highlightRoute(route) {
+            // 清除之前的高亮
+            map.removeLayer(routeLayerGroup);
+            map.removeLayer(routeStationsGroup);
+            routeLayerGroup = L.layerGroup();
+            routeStationsGroup = L.layerGroup();
+            
+            // 清除所有线路的高亮
+            Object.values(linePolylineRefs).forEach(refs => {
+                refs.highlightLine.setStyle({
+                    opacity: 0,
+                    weight: 25
+                });
+            });
+            
+            // 高亮线路段
+            for (let i = 0; i < route.length - 1; i++) {
+                const currentStep = route[i];
+                const nextStep = route[i + 1];
+                
+                // 确定使用哪条线路来高亮这段线段
+                // 优先使用nextStep的线路（因为currentStep可能是换乘站，线路为上一条线路）
+                const lineName = nextStep.line || currentStep.line;
+                
+                if (lineName) {
+                    const lineRefs = linePolylineRefs[lineName];
+                    if (lineRefs) {
+                        // 获取线路的所有站点
+                        const lineStations = lineConnections[lineName];
+                        if (lineStations) {
+                            // 找到当前站点和下一站在线路中的索引（处理环线的重复站点问题）
+                            const currentIndices = [];
+                            const nextIndices = [];
+                            
+                            // 收集所有匹配的索引
+                            for (let i = 0; i < lineStations.length; i++) {
+                                if (lineStations[i] === currentStep.station) {
+                                    currentIndices.push(i);
+                                }
+                                if (lineStations[i] === nextStep.station) {
+                                    nextIndices.push(i);
+                                }
+                            }
+                            
+                            // 检查是否有相邻的索引对（包括环线的最后一站到第一站）
+                            let foundAdjacent = false;
+                            for (const currentIndex of currentIndices) {
+                                for (const nextIndex of nextIndices) {
+                                    // 检查是否相邻（包括环线的最后一站到第一站）
+                                    if (Math.abs(currentIndex - nextIndex) === 1 || 
+                                        (currentIndex === lineStations.length - 1 && nextIndex === 0) || 
+                                        (currentIndex === 0 && nextIndex === lineStations.length - 1)) {
+                                        // 创建只包含这两个站点的高亮线段
+                                        const segmentCoords = [
+                                            [allStations[currentStep.station].lat, allStations[currentStep.station].lng],
+                                            [allStations[nextStep.station].lat, allStations[nextStep.station].lng]
+                                        ];
+                                        
+                                        // 创建高亮线段
+                                        L.polyline(segmentCoords, {
+                                            color: '#FFFF00', // 荧光黄色
+                                            weight: 25,
+                                            opacity: 0.8,
+                                            interactive: false,
+                                            pointerEvents: 'none'
+                                        }).addTo(routeLayerGroup);
+                                        foundAdjacent = true;
+                                        break;
+                                    }
+                                }
+                                if (foundAdjacent) break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // 显示路径中经过的站点（如果用户关闭了"显示站点"开关）
+            if (!showStationPoints) {
+                for (const step of route) {
+                    const station = allStations[step.station];
+                    if (station) {
+                        // 创建站点标记
+                        L.circleMarker([station.lat, station.lng], {
+                            radius: 4,
+                            fillColor: '#999',
+                            color: '#fff',
+                            weight: 2,
+                            opacity: 1,
+                            fillOpacity: 1,
+                            cursor: 'default'
+                        }).addTo(routeStationsGroup);
+                    }
+                }
+            }
+            
+            // 确保高亮线路显示在原始线路下方，站点显示在最上方
+            // 1. 先移除所有线路图层
+            Object.values(lineLayers).forEach(lineLayer => {
+                map.removeLayer(lineLayer);
+            });
+            
+            // 2. 添加高亮图层
+            routeLayerGroup.addTo(map);
+            
+            // 3. 重新添加所有线路图层
+            Object.values(lineLayers).forEach(lineLayer => {
+                lineLayer.addTo(map);
+            });
+            
+            // 4. 添加路径站点图层（如果用户关闭了"显示站点"开关）
+            if (!showStationPoints) {
+                routeStationsGroup.addTo(map);
+            } else {
+                // 如果用户开启了"显示站点"开关，确保站点图层显示在最上方
+                if (!map.hasLayer(stationPointsGroup)) {
+                    stationPointsGroup.addTo(map);
+                } else {
+                    // 如果站点图层已经在地图上，先移除再重新添加，确保它在最上方
+                    map.removeLayer(stationPointsGroup);
+                    stationPointsGroup.addTo(map);
+                }
+            }
+        }
+        
+        // 清除路径高亮
+        function clearRouteHighlight() {
+            map.removeLayer(routeLayerGroup);
+            map.removeLayer(routeStationsGroup);
+            routeLayerGroup = L.layerGroup();
+            routeStationsGroup = L.layerGroup();
+            // 恢复所有线路的原始状态
+            Object.values(linePolylineRefs).forEach(refs => {
+                refs.highlightLine.setStyle({
+                    opacity: 0,
+                    weight: 25
+                });
+            });
+            
+            // 确保所有线路图层都正确添加到地图上
+            Object.values(lineLayers).forEach(lineLayer => {
+                if (!map.hasLayer(lineLayer)) {
+                    lineLayer.addTo(map);
+                }
+            });
+            
+            // 恢复站点图层的显示状态
+            if (showStationPoints) {
+                if (!map.hasLayer(stationPointsGroup)) {
+                    stationPointsGroup.addTo(map);
+                }
+            } else {
+                if (map.hasLayer(stationPointsGroup)) {
+                    map.removeLayer(stationPointsGroup);
+                }
+            }
+        }
+        
+        // 查询按钮点击事件
+        searchRouteBtn.addEventListener('click', function() {
+            const start = startStation.value.trim();
+            const end = endStation.value.trim();
+            
+            if (!start || !end) {
+                alert('请输入起点和终点');
+                return;
+            }
+            
+            if (!allStations[start] || !allStations[end]) {
+                alert('起点或终点不存在');
+                return;
+            }
+            
+            const route = findRoute(start, end);
+            if (!route) {
+                alert('未找到路径');
+                return;
+            }
+            
+            // 计算站点数和换乘次数
+            const stationCount = route.length;
+            const transferCount = countTransfers(route);
+            
+            // 显示结果
+            routeSummary.innerHTML = `${stationCount}站 / ${transferCount}次换乘`;
+            
+            // 构建路径详情
+            let detailsHTML = '';
+            let currentLine = null;
+            
+            // 确保起点站有正确的线路信息
+            if (route.length > 0 && !route[0].line && route.length > 1 && route[1].line) {
+                route[0].line = route[1].line;
+            }
+            
+            // 遍历路径，构建线路详情
+            for (let i = 0; i < route.length; i++) {
+                const step = route[i];
+                
+                // 检查下一个站点是否是线路变化的位置
+                const nextStep = route[i+1];
+                const isNextLineChange = nextStep && nextStep.line && nextStep.line !== step.line;
+                
+                // 当线路变化时
+                if (step.line && step.line !== currentLine) {
+                    // 如果不是第一个线路，关闭上一个线路的div
+                    if (currentLine) {
+                        detailsHTML += '</div>';
+                    }
+                    
+                    // 更新当前线路
+                    currentLine = step.line;
+                    const lineColor = lineColors[currentLine] || '#000';
+                    
+                    // 添加新线路的标题和div
+                    detailsHTML += `<div style="margin-bottom: 2px;"><span style="display: inline-block; width: 12px; height: 12px; background-color: ${lineColor}; border-radius: 2px; margin-right: 5px; vertical-align: top; margin-top: 2px;"></span>${currentLine}</div><div style="margin-left: 17px; line-height: 1.3; margin-bottom: 10px;">`;
+                    
+                    // 添加换乘站作为新线路的起点（如果不是第一个站点）
+                    if (i > 0) {
+                        const transferStation = route[i-1].station;
+                        detailsHTML += transferStation;
+                        if (i < route.length - 1) {
+                            detailsHTML += ' → ';
+                        }
+                    }
+                } else {
+                    // 添加当前站点
+                    detailsHTML += step.station;
+                    // 只有当不是线路变化的前一个站点且不是最后一个站点时，才添加箭头
+                    if (!isNextLineChange && i < route.length - 1) {
+                        detailsHTML += ' → ';
+                    }
+                }
+            }
+            if (currentLine) {
+                detailsHTML += '</div>';
+            }
+            
+            routeDetails.innerHTML = detailsHTML;
+            routeResult.style.display = 'block';
+            
+            // 高亮路径
+            highlightRoute(route);
+            
+            // 地图缩放至路径范围
+            const bounds = L.latLngBounds();
+            for (const step of route) {
+                const station = allStations[step.station];
+                if (station) {
+                    bounds.extend([station.lat, station.lng]);
+                }
+            }
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 14 });
+        });
+        
+        // 清除路径按钮点击事件
+        clearRouteBtn.addEventListener('click', function() {
+            // 清空起点和终点输入框
+            startStation.value = '';
+            endStation.value = '';
+            
+            // 清除高亮结果
+            clearRouteHighlight();
+            routeResult.style.display = 'none';
+        });
+        
+        // 工具栏折叠功能
+        const sectionHeaders = document.querySelectorAll('.section-header');
+        
+        sectionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const section = this.dataset.section;
+                const content = document.getElementById(section + 'Content');
+                
+                // 检查当前是否已展开
+                const isCurrentlyCollapsed = this.classList.contains('collapsed');
+                
+                if (isCurrentlyCollapsed) {
+                    // 如果当前是折叠状态，则先收起所有其他部分，然后再展开当前部分
+                    let hasOtherExpanded = false;
+                    sectionHeaders.forEach(otherHeader => {
+                        if (otherHeader !== header && !otherHeader.classList.contains('collapsed')) {
+                            otherHeader.classList.add('collapsed');
+                            const otherSection = otherHeader.dataset.section;
+                            const otherContent = document.getElementById(otherSection + 'Content');
+                            if (otherContent) {
+                                otherContent.classList.add('collapsed');
+                                hasOtherExpanded = true;
+                            }
+                        }
+                    });
+                    
+                    // 如果有其他部分需要收起，则等待收起动画完成后再展开当前部分
+                    if (hasOtherExpanded) {
+                        setTimeout(() => {
+                            this.classList.remove('collapsed');
+                            content.classList.remove('collapsed');
+                        }, 100);
+                    } else {
+                        // 如果没有其他部分需要收起，则立即展开当前部分
+                        this.classList.remove('collapsed');
+                        content.classList.remove('collapsed');
+                    }
+                } else {
+                    // 如果当前是展开状态，则收起它
+                    this.classList.add('collapsed');
+                    content.classList.add('collapsed');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
