@@ -33,6 +33,7 @@
             box-sizing: border-box;
             height: auto;
             width: auto;
+            cursor: default;
         }
         
         body {
@@ -42,8 +43,8 @@
             font-family: Arial, sans-serif;
         }
         
-        /* 开关容器样式 */
-        .switch-container {
+        /* 工具栏样式 */
+        .toolbar {
             position: absolute;
             top: 20px;
             right: 20px;
@@ -58,6 +59,8 @@
             gap: 10px;
             pointer-events: auto;
             user-select: none;
+            width: 200px;
+            box-sizing: border-box;
         }
         
         /* Leaflet缩放控制按钮样式 */
@@ -107,6 +110,14 @@
         
         .leaflet-bottom.leaflet-left {
             z-index: 1000 !important;
+        }
+        
+        /* 单个控制项样式 */
+        .control-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
         }
         
         /* 单个开关项样式 */
@@ -272,6 +283,12 @@
             transform: translateX(20px);
         }
         
+        .control-label {
+            font-size: 14px;
+            color: #333;
+            font-weight: normal;
+        }
+        
         .switch-label {
             font-size: 14px;
             color: #333;
@@ -361,9 +378,120 @@
         }
         
         /* 允许输入元素被选择和交互 */
-        input, textarea, select {
+        input, textarea {
             user-select: auto;
             pointer-events: auto;
+        }
+        
+        /* 自定义下拉菜单容器 */
+        .custom-dropdown {
+            position: relative;
+            min-width: 60px;
+            margin-right: 22px;
+        }
+        
+        /* 下拉菜单触发按钮 */
+        .dropdown-toggle {
+            width: 130%;
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+        
+        /* 触发按钮悬停效果 */
+        .dropdown-toggle:hover {
+            border-color: #ccc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* 触发按钮激活效果 */
+        .dropdown-toggle.active {
+            border-color: #004EA2;
+            box-shadow: 0 0 0 2px rgba(0, 78, 162, 0.1);
+        }
+        
+        /* 下拉箭头 */
+        .dropdown-arrow {
+            width: 0;
+            height: 0;
+            border-left: 5px solid transparent;
+            border-right: 5px solid transparent;
+            border-top: 5px solid #666;
+            transition: transform 0.2s ease;
+        }
+        
+        /* 箭头旋转效果 */
+        .dropdown-toggle.active .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        
+        /* 下拉菜单选项列表 */
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 130%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001; /* 确保在其他元素上方 */
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+            box-sizing: border-box;
+        }
+        
+        /* 下拉菜单显示状态 */
+        .dropdown-menu.show {
+            display: block;
+            animation: dropdownFadeIn 0.2s ease;
+        }
+        
+        /* 淡入动画 */
+        @keyframes dropdownFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 下拉选项 */
+        .dropdown-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
+        /* 选项悬停效果 */
+        .dropdown-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* 选项选中效果 */
+        .dropdown-item.selected {
+            background-color: #e6f0f8;
+            color: #004EA2;
         }
         
         .legend-container h3 {
@@ -412,6 +540,109 @@
             color: #333;
         }
         
+        /* 搜索容器样式 */
+        .custom-search {
+            position: relative;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        
+        /* 搜索标题 */
+        .search-header {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        /* 搜索输入框样式 */
+        .search-input {
+            width: 100%;
+            padding: 6px 12px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #333;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box;
+        }
+        
+        /* 搜索输入框聚焦效果 */
+        .search-input:focus {
+            outline: none;
+            border-color: #004EA2;
+            box-shadow: 0 0 0 2px rgba(0, 78, 162, 0.1);
+        }
+        
+        /* 搜索结果容器样式 */
+        .search-results {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1001;
+            margin-top: 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            display: block;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            pointer-events: none;
+        }
+        
+        /* 搜索结果容器显示状态 */
+        .search-results.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        
+        /* 淡入动画 */
+        @keyframes searchFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 搜索结果项样式 */
+        .search-result-item {
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #333;
+            transition: background-color 0.2s ease;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
+        /* 搜索结果项悬停效果 */
+        .search-result-item:hover {
+            background-color: #f5f5f5;
+        }
+        
+        /* 无结果提示 */
+        .no-results {
+            padding: 8px 12px;
+            font-size: 14px;
+            color: #999;
+            cursor: default;
+            width: 100%;
+            box-sizing: border-box;
+            text-align: left;
+        }
+        
         /* 地图容器样式 */
         #map {
             position: relative;
@@ -419,8 +650,18 @@
     </style>
 </head>
 <body>
-        <!-- 开关容器 -->
-        <div class="switch-container">
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <!-- 站点搜索输入框 -->
+            <div class="custom-search">
+                <div class="search-header">站点搜索</div>
+                <input type="text" id="stationSearch" placeholder="输入站点名称" class="search-input">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+            
             <!-- 底图不透明度滑块 -->
             <div class="slider-container">
                 <div class="slider-header">
@@ -431,8 +672,8 @@
             </div>
             
             <!-- 背景颜色选择器 -->
-            <div class="switch-item">
-                <span class="switch-label">背景颜色</span>
+            <div class="control-item">
+                <span class="control-label">背景颜色</span>
                 <input type="color" id="bgColorPicker" value="#ffffff" style="width: 40px; height: 24px; cursor: pointer; border: none; border-radius: 3px;">
             </div>
             
@@ -464,6 +705,24 @@
                     <input type="checkbox" id="showLegend">
                     <span class="slider"></span>
                 </label>
+            </div>
+            
+            <!-- 分隔线 -->
+            <div class="divider"></div>
+            
+            <!-- 底图来源选择 -->
+            <div class="control-item">
+                <span class="control-label">地图服务</span>
+                <div class="custom-dropdown">
+                    <div class="dropdown-toggle" id="mapSourceToggle">
+                        <span class="selected-text">AMap</span>
+                        <span class="dropdown-arrow"></span>
+                    </div>
+                    <div class="dropdown-menu" id="mapSourceMenu">
+                        <div class="dropdown-item" data-value="osm">OSM</div>
+                        <div class="dropdown-item selected" data-value="amap">AMap</div>
+                    </div>
+                </div>
             </div>
         </div>
         
@@ -514,15 +773,24 @@
         // 初始化地图
         const map = L.map('map').setView([39.9042, 116.4074], 12);
 
-        // 添加高德地图图层
-        const baseLayer = L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
-            subdomains: ['1', '2', '3', '4'],
-            attribution: '© 高德地图'
-        }).addTo(map);
+        // 创建不同的底图图层
+        const baseLayers = {
+            'osm': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }),
+            'amap': L.tileLayer('https://webrd0{s}.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=8&x={x}&y={y}&z={z}', {
+                subdomains: ['1', '2', '3', '4'],
+                attribution: '© 高德地图'
+            })
+        };
+        
+        // 添加默认底图（高德地图）
+        let currentBaseLayer = baseLayers['amap'];
+        currentBaseLayer.addTo(map);
         
         // 底图初始透明度设为1.0，后续通过滑块控制
         let baseOpacity = 1.0;
-        baseLayer.setOpacity(baseOpacity);
+        currentBaseLayer.setOpacity(baseOpacity);
         
 
         // 线路颜色配置
@@ -1264,7 +1532,9 @@
                     color: '#FFFF00', // 荧光黄色
                     weight: 25,
                     opacity: 0, // 初始隐藏
-                    zIndexOffset: -1
+                    zIndexOffset: -1,
+                    interactive: false,
+                    pointerEvents: 'none'
                 }).addTo(lineLayer);
                 
                 // 绘制主线路
@@ -1272,7 +1542,9 @@
                     color: color,
                     weight: 4,
                     opacity: 1,
-                    zIndexOffset: 0
+                    zIndexOffset: 0,
+                    interactive: false,
+                    pointerEvents: 'none'
                 }).addTo(lineLayer);
                 
                 // 保存线路引用
@@ -1296,7 +1568,8 @@
                         color: '#fff',
                         weight: 2,
                         opacity: 1,
-                        fillOpacity: 1
+                        fillOpacity: 1,
+                        cursor: 'default'
                     });
                     
                     // 添加点击事件 - 显示站点信息悬浮窗口
@@ -1466,7 +1739,7 @@
             
             // 调整底图透明度
             baseOpacity = opacity / 100;
-            baseLayer.setOpacity(baseOpacity);
+            currentBaseLayer.setOpacity(baseOpacity);
             
             // 更新显示值
             opacityValueDisplay.textContent = opacity + '%';
@@ -1647,6 +1920,177 @@
             mapContainer.style.backgroundColor = bgColor;
             // 保存状态到localStorage
             localStorage.setItem('bgColor', bgColor);
+        });
+        
+        // 自定义下拉菜单逻辑
+        const dropdownToggle = document.getElementById('mapSourceToggle');
+        const dropdownMenu = document.getElementById('mapSourceMenu');
+        const selectedText = dropdownToggle.querySelector('.selected-text');
+        const dropdownItems = dropdownMenu.querySelectorAll('.dropdown-item');
+        
+        // 切换下拉菜单显示/隐藏
+        dropdownToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+            dropdownToggle.classList.toggle('active');
+        });
+        
+        // 点击文档其他地方关闭下拉菜单
+        document.addEventListener('click', function() {
+            dropdownMenu.classList.remove('show');
+            dropdownToggle.classList.remove('active');
+        });
+        
+        // 点击下拉菜单项
+        dropdownItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                
+                const selectedSource = this.dataset.value;
+                const sourceText = this.textContent;
+                
+                // 更新选中文本
+                selectedText.textContent = sourceText;
+                
+                // 移除当前底图
+                map.removeLayer(currentBaseLayer);
+                
+                // 添加新底图
+                currentBaseLayer = baseLayers[selectedSource];
+                currentBaseLayer.addTo(map);
+                
+                // 应用当前透明度设置
+                currentBaseLayer.setOpacity(baseOpacity);
+                
+                // 更新选中状态
+                dropdownItems.forEach(i => i.classList.remove('selected'));
+                this.classList.add('selected');
+                
+                // 关闭下拉菜单
+                dropdownMenu.classList.remove('show');
+                dropdownToggle.classList.remove('active');
+            });
+        });
+        
+        // 站点搜索功能
+        const stationSearchInput = document.getElementById('stationSearch');
+        const searchResultsContainer = document.getElementById('searchResults');
+        
+        // 页面加载时清空搜索框
+        window.addEventListener('load', function() {
+            stationSearchInput.value = '';
+            searchResultsContainer.classList.remove('show');
+        });
+        
+        // 添加输入事件监听器
+        stationSearchInput.addEventListener('input', function() {
+            const searchTerm = this.value.trim();
+            
+            if (searchTerm.length === 0) {
+                searchResultsContainer.classList.remove('show');
+                return;
+            }
+            
+            // 模糊搜索站点
+            const filteredStations = Object.entries(allStations).filter(([stationName, station]) => {
+                return stationName.includes(searchTerm);
+            });
+            
+            // 显示搜索结果
+            if (filteredStations.length > 0) {
+                searchResultsContainer.innerHTML = '';
+                filteredStations.forEach(([stationName, station]) => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.textContent = stationName;
+                    resultItem.dataset.stationName = stationName;
+                    resultItem.dataset.lat = station.lat;
+                    resultItem.dataset.lng = station.lng;
+                    
+                    // 添加点击事件
+                    resultItem.addEventListener('click', function() {
+                        const stationName = this.dataset.stationName;
+                        const lat = parseFloat(this.dataset.lat);
+                        const lng = parseFloat(this.dataset.lng);
+                        
+                        // 地图平移并缩放
+                        map.setView([lat, lng], 15);
+                        
+                        // 关闭搜索结果
+                        searchResultsContainer.classList.remove('show');
+                        stationSearchInput.value = '';
+                        
+                        // 触发站点点击事件，显示弹窗
+                        // 找到对应的站点标记并触发点击
+                        const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
+                            const latlng = layer.getLatLng();
+                            return latlng.lat === lat && latlng.lng === lng;
+                        });
+                        
+                        if (stationMarker) {
+                            // 添加延迟，让地图有足够时间平移到位
+                            setTimeout(function() {
+                                // 模拟点击事件
+                                stationMarker.fire('click', {
+                                    latlng: [lat, lng]
+                                });
+                            }, 300); // 300毫秒延迟
+                        }
+                    });
+                    
+                    searchResultsContainer.appendChild(resultItem);
+                });
+                
+                searchResultsContainer.classList.add('show');
+            } else {
+                searchResultsContainer.innerHTML = '<div class="no-results">无匹配站点</div>';
+                searchResultsContainer.classList.add('show');
+            }
+        });
+        
+        // 添加回车键事件监听器，支持完整站名直接回车定位
+        stationSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' || e.keyCode === 13) {
+                const searchTerm = this.value.trim();
+                
+                // 检查是否为完整站点名称
+                if (allStations.hasOwnProperty(searchTerm)) {
+                    const station = allStations[searchTerm];
+                    const lat = station.lat;
+                    const lng = station.lng;
+                    
+                    // 地图平移并缩放
+                    map.setView([lat, lng], 15);
+                    
+                    // 关闭搜索结果
+                    searchResultsContainer.classList.remove('show');
+                    stationSearchInput.value = '';
+                    
+                    // 触发站点点击事件，显示弹窗
+                    // 找到对应的站点标记并触发点击
+                    const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
+                        const latlng = layer.getLatLng();
+                        return latlng.lat === lat && latlng.lng === lng;
+                    });
+                    
+                    if (stationMarker) {
+                        // 添加延迟，让地图有足够时间平移到位
+                        setTimeout(function() {
+                            // 模拟点击事件
+                            stationMarker.fire('click', {
+                                latlng: [lat, lng]
+                            });
+                        }, 300); // 300毫秒延迟
+                    }
+                }
+            }
+        });
+        
+        // 点击页面其他地方关闭搜索结果
+        document.addEventListener('click', function(e) {
+            if (!stationSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
+                searchResultsContainer.classList.remove('show');
+            }
         });
     </script>
 </body>
