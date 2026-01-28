@@ -756,8 +756,18 @@
                 </div>
                 
                 <!-- 查询结果展示 -->
-                <div id="routeResult" style="display: none; margin-top: 10px; padding: 8px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 5px; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
-                    <div style="font-weight: bold; margin-bottom: 5px;">查询结果</div>
+                <div id="routeResult" style="display: none; margin-top: 10px; padding: 8px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 5px; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); box-sizing: border-box; position: relative;">
+                    <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                        查询结果
+                        <div style="display: flex; gap: 5px;">
+                            <button id="toggleRouteModeBtnLeft" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button id="toggleRouteModeBtnRight" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
                     <div id="routeSummary" style="margin-bottom: 5px;"></div>
                     <div id="routeDetails" style="line-height: 1.4;"></div>
                     <button id="clearRouteBtn" style="width: 100%; margin-top: 8px; padding: 4px; background-color: #f0f0f0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">清除</button>
@@ -1550,7 +1560,7 @@
             '八通线': ['四惠', '四惠东', '高碑店', '传媒大学', '双桥', '管庄', '八里桥', '通州北苑', '果园', '九棵树', '梨园', '临河里', '土桥', '花庄', '环球度假区'],
             '2号线': ['西直门', '车公庄', '阜成门', '复兴门', '长椿街', '宣武门', '和平门', '前门', '崇文门', '北京站', '建国门', '朝阳门', '东四十条', '东直门', '雍和宫', '安定门', '鼓楼大街', '积水潭', '西直门'],
             '3号线': ['东四十条', '工人体育场', '团结湖', '朝阳公园', '石佛营', '朝阳站', '姚家园', '东坝南', '东坝', '东坝北'],
-            '4号线': ['安河桥北', '北宫门', '西苑', '圆明园', '北京大学东门', '中关村', '海淀黄庄', '人民大学', '魏公村', '国家图书馆', '动物园', '西直门', '新街口', '平安里', '西四', '灵境胡同', '西单', '宣武门', '菜市口', '陶然亭', '北京南站', '马家堡', '公益西桥'],
+            '4号线': ['安河桥北', '北宫门', '西苑', '圆明园', '北京大学东门', '中关村', '海淀黄庄', '人民大学', '魏公村', '国家图书馆', '动物园', '西直门', '新街口', '平安里', '西四', '灵境胡同', '西单', '宣武门', '菜市口', '陶然亭', '北京南站', '马家堡', '角门西', '公益西桥'],
             '大兴线': ['天宫院', '生物医药基地', '义和庄', '黄村火车站', '黄村西大街', '清源路', '枣园', '高米店南', '高米店北', '西红门', '新宫', '公益西桥'],
             '5号线': ['宋家庄', '刘家窑', '蒲黄榆', '天坛东门', '磁器口', '崇文门', '东单', '灯市口', '东四', '张自忠路', '北新桥', '雍和宫', '和平里北街', '和平西桥', '惠新西街南口', '惠新西街北口', '大屯路东', '北苑路北', '立水桥南', '立水桥', '天通苑南', '天通苑', '天通苑北'],
             '6号线': ['金安桥', '苹果园', '杨庄', '西黄村', '廖公庄', '田村', '海淀五路居', '慈寿寺', '花园桥', '白石桥南', '二里沟', '车公庄西', '车公庄', '平安里', '北海北', '南锣鼓巷', '东四', '朝阳门', '东大桥', '呼家楼', '金台路', '十里堡', '青年路', '褡裢坡', '黄渠', '常营', '草房', '物资学院路', '通州北关', '北运河西', '北运河东', '郝家府', '东夏园', '潞城', '潞阳'],
@@ -2347,33 +2357,60 @@
         
         const graph = buildGraph();
         
-        // BFS算法查找路径
+        // Dijkstra算法查找路径，支持站数优先和换乘次数优先
         function findRoute(start, end) {
             if (!allStations[start] || !allStations[end]) {
                 return null;
             }
             
-            const visited = new Set();
-            const queue = [[start, [], null]]; // [当前站点, 路径, 上一条线路]
+            // 优先级队列，存储 [成本, 当前站点, 路径, 上一条线路]
+            const priorityQueue = [];
+            // 记录每个站点的最小成本
+            const costs = {};
+            // 初始化优先级队列
+            priorityQueue.push([0, start, [], null]);
+            costs[start] = 0;
             
-            while (queue.length > 0) {
-                const [current, path, lastLine] = queue.shift();
+            // 按成本排序函数
+            priorityQueue.sort((a, b) => a[0] - b[0]);
+            
+            while (priorityQueue.length > 0) {
+                // 取出成本最小的元素
+                const [currentCost, current, path, lastLine] = priorityQueue.shift();
                 
-                if (visited.has(current)) {
-                    continue;
+                // 如果到达终点，返回路径
+                if (current === end) {
+                    return [...path, { station: current, line: lastLine }];
                 }
                 
-                visited.add(current);
-                const newPath = [...path, { station: current, line: lastLine }];
-                
-                if (current === end) {
-                    return newPath;
+                // 如果当前成本大于已知最小成本，跳过
+                if (costs[current] !== undefined && costs[current] < currentCost) {
+                    continue;
                 }
                 
                 // 遍历所有邻接站点
                 graph[current].forEach(edge => {
-                    if (!visited.has(edge.station)) {
-                        queue.push([edge.station, newPath, edge.line]);
+                    // 计算新成本
+                    let newCost = currentCost;
+                    
+                    if (routeMode === 'stations') {
+                        // 站数优先：每站成本为1，换乘成本为0
+                        newCost += 1;
+                    } else {
+                        // 换乘次数优先：每站成本为0.1，换乘成本为1
+                        if (edge.line !== lastLine && lastLine !== null) {
+                            newCost += 1; // 换乘成本
+                        }
+                        newCost += 0.1; // 站数成本，很小
+                    }
+                    
+                    // 如果是新站点或者新成本更低，更新
+                    if (costs[edge.station] === undefined || newCost < costs[edge.station]) {
+                        costs[edge.station] = newCost;
+                        const newPath = [...path, { station: current, line: lastLine }];
+                        priorityQueue.push([newCost, edge.station, newPath, edge.line]);
+                        // 重新排序优先级队列
+                        priorityQueue.sort((a, b) => a[0] - b[0]);
                     }
                 });
             }
@@ -2396,6 +2433,27 @@
             }
             
             return transfers;
+        }
+        
+        // 当前查询模式：'stations' (站数优先) 或 'transfers' (换乘次数优先)
+        let routeMode = 'stations';
+        
+        // 切换查询模式
+        function toggleRouteMode() {
+            routeMode = routeMode === 'stations' ? 'transfers' : 'stations';
+            updateRouteModeButtons();
+        }
+        
+        // 更新模式按钮状态
+        function updateRouteModeButtons() {
+            const leftBtn = document.getElementById('toggleRouteModeBtnLeft');
+            const rightBtn = document.getElementById('toggleRouteModeBtnRight');
+            
+            // 重置按钮样式
+            leftBtn.style.backgroundColor = '#f0f0f0';
+            leftBtn.style.color = '#333';
+            rightBtn.style.backgroundColor = '#f0f0f0';
+            rightBtn.style.color = '#333';
         }
         
         // 高亮路径
@@ -2665,6 +2723,32 @@
             clearRouteHighlight();
             routeResult.style.display = 'none';
         });
+        
+        // 重新查询路径
+        function reSearchRoute() {
+            const start = document.getElementById('startStation').value.trim();
+            const end = document.getElementById('endStation').value.trim();
+            
+            if (start && end) {
+                document.getElementById('searchRouteBtn').click();
+            }
+        }
+        
+        // 添加模式切换按钮事件监听器
+        document.getElementById('toggleRouteModeBtnLeft').addEventListener('click', function() {
+            routeMode = 'stations';
+            updateRouteModeButtons();
+            reSearchRoute(); // 重新查询路径
+        });
+        
+        document.getElementById('toggleRouteModeBtnRight').addEventListener('click', function() {
+            routeMode = 'transfers';
+            updateRouteModeButtons();
+            reSearchRoute(); // 重新查询路径
+        });
+        
+        // 初始化模式按钮状态
+        updateRouteModeButtons();
         
         // 工具栏折叠功能
         const sectionHeaders = document.querySelectorAll('.section-header');
