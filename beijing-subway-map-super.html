@@ -135,13 +135,6 @@
             align-items: center;
         }
         
-        /* 滑块标签样式 */
-        .slider-label {
-            font-size: 14px;
-            color: #333;
-            font-weight: normal;
-        }
-        
         /* 范围滑块样式 - 基础样式 */
         input[type="range"] {
             width: 98.7%;
@@ -276,12 +269,6 @@
         }
         
         .control-label {
-            font-size: 14px;
-            color: #333;
-            font-weight: normal;
-        }
-        
-        .switch-label {
             font-size: 14px;
             color: #333;
             font-weight: normal;
@@ -544,7 +531,7 @@
         .custom-search {
             position: relative;
             width: 100%;
-            margin-bottom: 5px;
+            margin-bottom: 10px;
         }
         
         /* 搜索标题 */
@@ -694,7 +681,7 @@
             overflow: visible;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             max-height: 1000px;
-            margin: 10px 0;
+            margin: 10px 0 0 0;
             padding: 0;
             width: 100%;
             opacity: 1;
@@ -713,10 +700,27 @@
         /* 部分内容折叠样式 */
         .section-content.collapsed {
             max-height: 0;
-            margin: 0;
+            margin: 0 0 0 0;
             padding: 0;
             overflow: hidden;
             opacity: 0;
+        }
+        
+        /* 查询结果容器动画样式 */
+        #routeResult {
+            height: 0;
+            opacity: 0;
+            overflow: hidden;
+            margin-top: 0;
+            margin-bottom: 0 !important;
+            padding: 0;
+            box-sizing: border-box;
+            transition: height 0.3s ease-out, opacity 0.3s ease-out, margin 0.3s ease-out;
+        }
+        
+        #routeResult.show {
+            opacity: 1;
+            margin-top: 8px;
         }
     </style>
 </head>
@@ -742,13 +746,13 @@
                 <div class="divider"></div>
                 
                 <!-- 路径查询 -->
-                <div class="route-search">
+                <div class="route-search" style="margin-bottom: 0;">
                     <div class="search-header">查询路径</div>
-                    <div class="custom-search" style="margin-bottom: 8px;">
+                    <div class="custom-search" style="margin-bottom: 10px;">
                         <input type="text" id="startStation" placeholder="起点" class="search-input">
                         <div class="search-results" id="startStationResults"></div>
                     </div>
-                    <div class="custom-search" style="margin-bottom: 8px;">
+                    <div class="custom-search" style="margin-bottom: 10px;">
                         <input type="text" id="endStation" placeholder="终点" class="search-input">
                         <div class="search-results" id="endStationResults"></div>
                     </div>
@@ -756,14 +760,14 @@
                 </div>
                 
                 <!-- 查询结果展示 -->
-                <div id="routeResult" style="display: none; margin-top: 10px; padding: 8px; background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 5px; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); box-sizing: border-box; position: relative;">
-                    <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
-                        查询结果
-                        <div style="display: flex; gap: 5px;">
-                            <button id="toggleRouteModeBtnLeft" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                <div id="routeResult" style="background: rgba(255, 255, 255, 0.9); border: 1px solid #ddd; border-radius: 5px; font-size: 12px; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); box-sizing: border-box;">
+                    <div style="font-weight: bold; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; padding: 0 0;">
+                        <div style="padding: 2px 0;">查询结果</div>
+                        <div style="display: flex; gap: 5px; padding: 2px 0;">
+                            <button id="toggleRouteModeBtnLeft" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; transition: background-color 0.2s ease; vertical-align: middle;">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
-                            <button id="toggleRouteModeBtnRight" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px;">
+                            <button id="toggleRouteModeBtnRight" style="padding: 2px 6px; background-color: #f0f0f0; color: #333; border: none; border-radius: 3px; cursor: pointer; font-size: 10px; transition: background-color 0.2s ease; vertical-align: middle;">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
                         </div>
@@ -775,7 +779,7 @@
             </div>
             
             <!-- 分隔线 -->
-            <div class="divider"></div>
+            <div class="divider" style="margin-top: 8px;"></div>
             
             <!-- 设置部分标题 -->
             <div class="section-header collapsed" data-section="settings">
@@ -789,7 +793,7 @@
                 <!-- 底图不透明度滑块 -->
                 <div class="slider-container">
                     <div class="slider-header">
-                        <label for="maskOpacity" class="slider-label">底图不透明度</label>
+                        <label for="maskOpacity" class="control-label">底图不透明度</label>
                         <span id="opacityValue" class="opacity-value"></span>
                     </div>
                     <input type="range" id="maskOpacity" min="0" max="100">
@@ -806,7 +810,7 @@
                 
                 <!-- 显示站点开关 -->
                 <div class="control-item">
-                    <span class="switch-label">显示站点</span>
+                    <span class="control-label">显示站点</span>
                     <label class="switch">
                         <input type="checkbox" id="showStationPoints">
                         <span class="slider"></span>
@@ -815,7 +819,7 @@
                 
                 <!-- 显示站名开关 -->
                 <div class="control-item">
-                    <span class="switch-label">显示站名</span>
+                    <span class="control-label">显示站名</span>
                     <label class="switch">
                         <input type="checkbox" id="showStationNames">
                         <span class="slider"></span>
@@ -824,7 +828,7 @@
                 
                 <!-- 显示图例开关 -->
                 <div class="control-item">
-                    <span class="switch-label">显示图例</span>
+                    <span class="control-label">显示图例</span>
                     <label class="switch">
                         <input type="checkbox" id="showLegend">
                         <span class="slider"></span>
@@ -1565,7 +1569,7 @@
             '5号线': ['宋家庄', '刘家窑', '蒲黄榆', '天坛东门', '磁器口', '崇文门', '东单', '灯市口', '东四', '张自忠路', '北新桥', '雍和宫', '和平里北街', '和平西桥', '惠新西街南口', '惠新西街北口', '大屯路东', '北苑路北', '立水桥南', '立水桥', '天通苑南', '天通苑', '天通苑北'],
             '6号线': ['金安桥', '苹果园', '杨庄', '西黄村', '廖公庄', '田村', '海淀五路居', '慈寿寺', '花园桥', '白石桥南', '二里沟', '车公庄西', '车公庄', '平安里', '北海北', '南锣鼓巷', '东四', '朝阳门', '东大桥', '呼家楼', '金台路', '十里堡', '青年路', '褡裢坡', '黄渠', '常营', '草房', '物资学院路', '通州北关', '北运河西', '北运河东', '郝家府', '东夏园', '潞城', '潞阳'],
             '7号线': ['北京西站', '湾子', '达官营', '广安门内', '菜市口', '虎坊桥', '珠市口', '桥湾', '磁器口', '广渠门内', '广渠门外', '双井', '九龙山', '大郊亭', '百子湾', '化工', '南楼梓庄', '欢乐谷景区', '垡头', '双合', '焦化厂', '黄厂', '郎辛庄', '黑庄户', '万盛西', '万盛东', '群芳', '高楼金', '花庄', '环球度假区'],
-            '8号线': ['朱辛庄', '育知路', '平西府', '回龙观东大街', '霍营', '育新', '西小口', '永泰庄', '林萃桥', '森林公园南门', '奥林匹克公园', '奥体中心', '北土城', '安华桥', '安德里北街', '鼓楼大街', '什刹海', '南锣鼓巷', '中国美术馆', '金鱼胡同', '王府井', '前门', '珠市口', '天桥', '永定门外', '木樨园', '海户屯', '大红门南', '和义', '东高地', '火箭万源', '五福堂', '德茂', '瀛海'],
+            '8号线': ['朱辛庄', '育知路', '平西府', '回龙观东大街', '霍营', '育新', '西小口', '永泰庄', '林萃桥', '森林公园南门', '奥林匹克公园', '奥体中心', '北土城', '安华桥', '安德里北街', '鼓楼大街', '什刹海', '南锣鼓巷', '中国美术馆', '金鱼胡同', '王府井', '前门', '珠市口', '天桥', '永定门外', '木樨园', '海户屯', '大红门', '大红门南', '和义', '东高地', '火箭万源', '五福堂', '德茂', '瀛海'],
             '9号线': ['郭公庄', '丰台科技园', '科怡路', '丰台南路', '丰台东大街', '七里庄', '六里桥', '六里桥东', '北京西站', '军事博物馆', '白堆子', '白石桥南', '国家图书馆'],
             '10号线': ['巴沟', '苏州街', '海淀黄庄', '知春里', '知春路', '西土城', '牡丹园', '健德门', '北土城', '安贞门', '惠新西街南口', '芍药居', '太阳宫', '三元桥', '亮马桥', '农业展览馆', '团结湖', '呼家楼', '金台夕照', '国贸', '双井', '劲松', '潘家园', '十里河', '分钟寺', '成寿寺', '宋家庄', '石榴庄', '大红门', '角门东', '角门西', '草桥', '纪家庙', '首经贸', '丰台站', '泥洼', '西局', '六里桥', '莲花桥', '公主坟', '西钓鱼台', '慈寿寺', '车道沟', '长春桥', '火器营', '巴沟'],
             '11号线': ['新首钢', '北辛安', '金安桥', '模式口'],
@@ -2449,11 +2453,31 @@
             const leftBtn = document.getElementById('toggleRouteModeBtnLeft');
             const rightBtn = document.getElementById('toggleRouteModeBtnRight');
             
-            // 重置按钮样式
-            leftBtn.style.backgroundColor = '#f0f0f0';
-            leftBtn.style.color = '#333';
-            rightBtn.style.backgroundColor = '#f0f0f0';
-            rightBtn.style.color = '#333';
+            if (leftBtn && rightBtn) {
+                if (routeMode === 'stations') {
+                    // 站数优先模式：禁用向左箭头按钮
+                    leftBtn.disabled = true;
+                    leftBtn.style.backgroundColor = '#f0f0f0';
+                    leftBtn.style.color = '#ccc'; // 变灰
+                    leftBtn.style.cursor = 'default';
+                    
+                    // 启用向右箭头按钮
+                    rightBtn.disabled = false;
+                    rightBtn.style.color = '#333';
+                    rightBtn.style.cursor = 'pointer';
+                } else {
+                    // 换乘次数优先模式：禁用向右箭头按钮
+                    rightBtn.disabled = true;
+                    rightBtn.style.backgroundColor = '#f0f0f0';
+                    rightBtn.style.color = '#ccc'; // 变灰
+                    rightBtn.style.cursor = 'default';
+                    
+                    // 启用向左箭头按钮
+                    leftBtn.disabled = false;
+                    leftBtn.style.color = '#333';
+                    leftBtn.style.cursor = 'pointer';
+                }
+            }
         }
         
         // 高亮路径
@@ -2671,7 +2695,7 @@
                     const lineColor = lineColors[currentLine] || '#000';
                     
                     // 添加新线路的标题和div
-                    detailsHTML += `<div style="margin-bottom: 2px;"><span style="display: inline-block; width: 12px; height: 12px; background-color: ${lineColor}; border-radius: 2px; margin-right: 5px; vertical-align: top; margin-top: 2px;"></span>${currentLine}</div><div style="margin-left: 17px; line-height: 1.3; margin-bottom: 10px;">`;
+                    detailsHTML += `<div style="margin-bottom: 0px;"><span style="display: inline-block; width: 12px; height: 12px; background-color: ${lineColor}; border-radius: 2px; margin-right: 5px; vertical-align: top; margin-top: 2px;"></span>${currentLine}</div><div style="margin-left: 17px; line-height: 1.3; margin-bottom: 10px;">`;
                     
                     // 添加换乘站作为新线路的起点（如果不是第一个站点）
                     if (i > 0) {
@@ -2696,8 +2720,55 @@
                 detailsHTML += '</div>';
             }
             
+            // 检查是否已经显示
+            const wasVisible = routeResult.classList.contains('show');
+            
+            // 保存当前高度
+            let currentHeight = 0;
+            if (wasVisible) {
+                currentHeight = routeResult.scrollHeight;
+                // 确保使用内联样式设置当前高度
+                routeResult.style.height = currentHeight + 'px';
+            }
+            
+            // 更新内容
             routeDetails.innerHTML = detailsHTML;
-            routeResult.style.display = 'block';
+            
+            // 确保容器可见以计算新高度
+            routeResult.style.height = 'auto';
+            routeResult.style.padding = '8px';
+            const newHeight = routeResult.scrollHeight;
+            routeResult.style.padding = '0';
+            
+            // 如果之前是隐藏的
+            if (!wasVisible) {
+                // 从0高度开始动画
+                routeResult.style.height = '0';
+                routeResult.style.opacity = '0';
+                routeResult.style.marginTop = '0';
+                
+                // 强制浏览器重排
+                void routeResult.offsetWidth;
+                
+                // 开始动画到新高度
+                routeResult.style.height = newHeight + 'px';
+                routeResult.style.opacity = '1';
+                routeResult.style.marginTop = '8px';
+                routeResult.style.padding = '8px';
+                
+                // 添加show类
+                routeResult.classList.add('show');
+            } else {
+                // 从当前高度开始动画到新高度
+                routeResult.style.height = currentHeight + 'px';
+                
+                // 强制浏览器重排
+                void routeResult.offsetWidth;
+                
+                // 开始动画到新高度
+                routeResult.style.height = newHeight + 'px';
+                routeResult.style.padding = '8px';
+            }
             
             // 高亮路径
             highlightRoute(route);
@@ -2721,7 +2792,15 @@
             
             // 清除高亮结果
             clearRouteHighlight();
-            routeResult.style.display = 'none';
+            
+            // 触发淡出动画
+            routeResult.style.height = '0';
+            routeResult.style.opacity = '0';
+            routeResult.style.marginTop = '0';
+            routeResult.style.padding = '0';
+            
+            // 移除show类
+            routeResult.classList.remove('show');
         });
         
         // 重新查询路径
@@ -2732,6 +2811,46 @@
             if (start && end) {
                 document.getElementById('searchRouteBtn').click();
             }
+        }
+        
+        // 添加按钮的鼠标事件监听器
+        function addButtonEventListeners() {
+            const buttons = [
+                document.getElementById('toggleRouteModeBtnLeft'),
+                document.getElementById('toggleRouteModeBtnRight')
+            ];
+            
+            buttons.forEach(button => {
+                if (button) {
+                    // 鼠标悬停时
+                    button.addEventListener('mouseover', function() {
+                        if (!this.disabled) { // 只在按钮未禁用时
+                            this.style.backgroundColor = '#e0e0e0'; // 稍微变深
+                        }
+                    });
+                    
+                    // 鼠标按下时
+                    button.addEventListener('mousedown', function() {
+                        if (!this.disabled) { // 只在按钮未禁用时
+                            this.style.backgroundColor = '#d0d0d0'; // 更深
+                        }
+                    });
+                    
+                    // 鼠标移开时
+                    button.addEventListener('mouseout', function() {
+                        if (!this.disabled) { // 只在按钮未禁用时
+                            this.style.backgroundColor = '#f0f0f0'; // 恢复原始颜色
+                        }
+                    });
+                    
+                    // 鼠标释放时
+                    button.addEventListener('mouseup', function() {
+                        if (!this.disabled) { // 只在按钮未禁用时
+                            this.style.backgroundColor = '#e0e0e0'; // 恢复到悬停颜色
+                        }
+                    });
+                }
+            });
         }
         
         // 添加模式切换按钮事件监听器
@@ -2746,6 +2865,9 @@
             updateRouteModeButtons();
             reSearchRoute(); // 重新查询路径
         });
+        
+        // 添加按钮的鼠标事件监听器
+        addButtonEventListeners();
         
         // 初始化模式按钮状态
         updateRouteModeButtons();
