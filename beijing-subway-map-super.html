@@ -2601,10 +2601,6 @@
             for (let i = 0; i < route.length; i++) {
                 const step = route[i];
                 
-                // 检查下一个站点是否是线路变化的位置
-                const nextStep = route[i+1];
-                const isNextLineChange = nextStep && nextStep.line && nextStep.line !== step.line;
-                
                 // 当线路变化时
                 if (step.line && step.line !== currentLine) {
                     // 如果不是第一个线路，关闭上一个线路的div
@@ -2623,19 +2619,21 @@
                     if (i > 0) {
                         const transferStation = route[i-1].station;
                         detailsHTML += transferStation;
-                        if (i < route.length - 1) {
-                            detailsHTML += ' → ';
-                        }
-                    }
-                } else {
-                    // 添加当前站点
-                    detailsHTML += step.station;
-                    // 只有当不是线路变化的前一个站点且不是最后一个站点时，才添加箭头
-                    if (!isNextLineChange && i < route.length - 1) {
                         detailsHTML += ' → ';
                     }
+                    
+                    // 添加当前站点
+                    detailsHTML += step.station;
+                } else {
+                    // 添加当前站点
+                    if (i > 0) {
+                        detailsHTML += ' → ';
+                    }
+                    detailsHTML += step.station;
                 }
             }
+            
+            // 关闭最后一个线路的div
             if (currentLine) {
                 detailsHTML += '</div>';
             }
