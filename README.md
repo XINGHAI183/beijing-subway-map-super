@@ -32,14 +32,14 @@
 
 克隆仓库：
 ```bash
-git clone https://github.com/XINGHAI183/beijing-subway-map-plus
-cd beijing-subway-map-plus
+git clone https://github.com/XINGHAI183/beijing-subway-map-super
+cd beijing-subway-map-super
 ```
 
 直接用浏览器打开：
 ```bash
-# 打开 beijing-subway-map-plus.html
-open beijing-subway-map-plus.html
+# 打开 beijing-subway-map-super.html
+open beijing-subway-map-super.html
 ```
 
 把构建产物部署到任意静态主机：GitHub Pages、Netlify、Vercel 等。
