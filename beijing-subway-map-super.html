@@ -11,11 +11,13 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            position: relative;
         }
         #map {
             height: 100vh;
             width: 100vw;
             background-color: white;
+            position: relative;
         }
         .station-label {
             font-size: 12px !important;
@@ -35,13 +37,6 @@
             height: auto;
             width: auto;
             cursor: default;
-        }
-        
-        body {
-            position: relative;
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
         }
         
         /* 工具栏样式 */
@@ -722,10 +717,19 @@
             opacity: 1;
             margin-top: 8px;
         }
+        
+        /* 清除按钮样式 */
+        #clearRouteBtn:hover {
+            background-color: #e0e0e0 !important;
+        }
+        
+        #clearRouteBtn:active {
+            background-color: #d0d0d0 !important;
+        }
     </style>
 </head>
 <body>
-        <!-- Toolbar -->
+        <!-- 工具栏 -->
         <div class="toolbar">
             <!-- 工具部分标题 -->
             <div class="section-header collapsed" data-section="tools">
@@ -774,7 +778,7 @@
                     </div>
                     <div id="routeSummary" style="margin-bottom: 5px;"></div>
                     <div id="routeDetails" style="line-height: 1.4;"></div>
-                    <button id="clearRouteBtn" style="width: 100%; margin-top: 8px; padding: 4px; background-color: #f0f0f0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 12px;">清除</button>
+                    <button id="clearRouteBtn" style="width: 100%; margin-top: 8px; padding: 4px; background-color: #f0f0f0; color: #333; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; transition: background-color 0.2s ease;">清除</button>
                 </div>
             </div>
             
@@ -2000,15 +2004,18 @@
             });
         }
         
-        // 为所有图例项添加点击事件
-        const legendItems = document.querySelectorAll('.legend-item');
-        legendItems.forEach(item => {
-            const lineName = item.querySelector('.legend-text').textContent;
-            item.addEventListener('click', () => {
-                // 直接调用线路高亮函数，状态由高光是否显示决定
-                handleLegendItemClick(lineName);
+        // 为图例容器添加事件委托，处理图例项点击事件
+        const legendContainer = document.getElementById('legend');
+        if (legendContainer) {
+            legendContainer.addEventListener('click', function(e) {
+                const legendItem = e.target.closest('.legend-item');
+                if (legendItem) {
+                    const lineName = legendItem.querySelector('.legend-text').textContent;
+                    // 直接调用线路高亮函数，状态由高光是否显示决定
+                    handleLegendItemClick(lineName);
+                }
             });
-        });
+        }
         
         // 显示站点开关事件
         showStationPointsCheckbox.addEventListener('change', function() {
@@ -2070,13 +2077,14 @@
             dropdownToggle.classList.remove('active');
         });
         
-        // 点击下拉菜单项
-        dropdownItems.forEach(item => {
-            item.addEventListener('click', function(e) {
-                e.stopPropagation();
-                
-                const selectedSource = this.dataset.value;
-                const sourceText = this.textContent;
+        // 为下拉菜单容器添加事件委托，处理下拉菜单项点击事件
+        dropdownMenu.addEventListener('click', function(e) {
+            e.stopPropagation();
+            
+            const dropdownItem = e.target.closest('.dropdown-item');
+            if (dropdownItem) {
+                const selectedSource = dropdownItem.dataset.value;
+                const sourceText = dropdownItem.textContent;
                 
                 // 更新选中文本
                 selectedText.textContent = sourceText;
@@ -2093,12 +2101,12 @@
                 
                 // 更新选中状态
                 dropdownItems.forEach(i => i.classList.remove('selected'));
-                this.classList.add('selected');
+                dropdownItem.classList.add('selected');
                 
                 // 关闭下拉菜单
                 dropdownMenu.classList.remove('show');
                 dropdownToggle.classList.remove('active');
-            });
+            }
         });
         
         // 站点搜索功能
@@ -2152,37 +2160,6 @@
                     resultItem.dataset.lat = station.lat;
                     resultItem.dataset.lng = station.lng;
                     
-                    // 添加点击事件
-                    resultItem.addEventListener('click', function() {
-                        const stationName = this.dataset.stationName;
-                        const lat = parseFloat(this.dataset.lat);
-                        const lng = parseFloat(this.dataset.lng);
-                        
-                        // 地图平移并缩放
-                        map.setView([lat, lng], 15);
-                        
-                        // 关闭搜索结果
-                        searchResultsContainer.classList.remove('show');
-                        stationSearchInput.value = '';
-                        
-                        // 触发站点点击事件，显示弹窗
-                        // 找到对应的站点标记并触发点击
-                        const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
-                            const latlng = layer.getLatLng();
-                            return latlng.lat === lat && latlng.lng === lng;
-                        });
-                        
-                        if (stationMarker) {
-                            // 添加延迟，让地图有足够时间平移到位
-                            setTimeout(function() {
-                                // 模拟点击事件
-                                stationMarker.fire('click', {
-                                    latlng: [lat, lng]
-                                });
-                            }, 300); // 300毫秒延迟
-                        }
-                    });
-                    
                     searchResultsContainer.appendChild(resultItem);
                 });
                 
@@ -2231,6 +2208,40 @@
             }
         });
         
+        // 为搜索结果容器添加事件委托，处理搜索结果项点击事件
+        searchResultsContainer.addEventListener('click', function(e) {
+            const resultItem = e.target.closest('.search-result-item');
+            if (resultItem) {
+                const stationName = resultItem.dataset.stationName;
+                const lat = parseFloat(resultItem.dataset.lat);
+                const lng = parseFloat(resultItem.dataset.lng);
+                
+                // 地图平移并缩放
+                map.setView([lat, lng], 15);
+                
+                // 关闭搜索结果
+                searchResultsContainer.classList.remove('show');
+                stationSearchInput.value = '';
+                
+                // 触发站点点击事件，显示弹窗
+                // 找到对应的站点标记并触发点击
+                const stationMarker = Array.from(stationPointsGroup.getLayers()).find(layer => {
+                    const latlng = layer.getLatLng();
+                    return latlng.lat === lat && latlng.lng === lng;
+                });
+                
+                if (stationMarker) {
+                    // 添加延迟，让地图有足够时间平移到位
+                    setTimeout(function() {
+                        // 模拟点击事件
+                        stationMarker.fire('click', {
+                            latlng: [lat, lng]
+                        });
+                    }, 300); // 300毫秒延迟
+                }
+            }
+        });
+        
         // 点击页面其他地方关闭搜索结果
         document.addEventListener('click', function(e) {
             if (!stationSearchInput.contains(e.target) && !searchResultsContainer.contains(e.target)) {
@@ -2263,10 +2274,6 @@
                     resultItem.className = 'search-result-item';
                     resultItem.textContent = stationName;
                     resultItem.dataset.stationName = stationName;
-                    resultItem.addEventListener('click', function() {
-                        startStation.value = this.dataset.stationName;
-                        startStationResults.classList.remove('show');
-                    });
                     startStationResults.appendChild(resultItem);
                 });
                 startStationResults.classList.add('show');
@@ -2293,10 +2300,6 @@
                     resultItem.className = 'search-result-item';
                     resultItem.textContent = stationName;
                     resultItem.dataset.stationName = stationName;
-                    resultItem.addEventListener('click', function() {
-                        endStation.value = this.dataset.stationName;
-                        endStationResults.classList.remove('show');
-                    });
                     endStationResults.appendChild(resultItem);
                 });
                 endStationResults.classList.add('show');
@@ -2331,6 +2334,24 @@
                     // 取消选中终点输入框
                     this.blur();
                 }
+            }
+        });
+        
+        // 为起点搜索结果容器添加事件委托，处理搜索结果项点击事件
+        startStationResults.addEventListener('click', function(e) {
+            const resultItem = e.target.closest('.search-result-item');
+            if (resultItem) {
+                startStation.value = resultItem.dataset.stationName;
+                startStationResults.classList.remove('show');
+            }
+        });
+        
+        // 为终点搜索结果容器添加事件委托，处理搜索结果项点击事件
+        endStationResults.addEventListener('click', function(e) {
+            const resultItem = e.target.closest('.search-result-item');
+            if (resultItem) {
+                endStation.value = resultItem.dataset.stationName;
+                endStationResults.classList.remove('show');
             }
         });
         
@@ -2873,49 +2894,52 @@
         updateRouteModeButtons();
         
         // 工具栏折叠功能
-        const sectionHeaders = document.querySelectorAll('.section-header');
-        
-        sectionHeaders.forEach(header => {
-            header.addEventListener('click', function() {
-                const section = this.dataset.section;
-                const content = document.getElementById(section + 'Content');
-                
-                // 检查当前是否已展开
-                const isCurrentlyCollapsed = this.classList.contains('collapsed');
-                
-                if (isCurrentlyCollapsed) {
-                    // 如果当前是折叠状态，则先收起所有其他部分，然后再展开当前部分
-                    let hasOtherExpanded = false;
-                    sectionHeaders.forEach(otherHeader => {
-                        if (otherHeader !== header && !otherHeader.classList.contains('collapsed')) {
-                            otherHeader.classList.add('collapsed');
-                            const otherSection = otherHeader.dataset.section;
-                            const otherContent = document.getElementById(otherSection + 'Content');
-                            if (otherContent) {
-                                otherContent.classList.add('collapsed');
-                                hasOtherExpanded = true;
-                            }
-                        }
-                    });
+        const toolbar = document.querySelector('.toolbar');
+        if (toolbar) {
+            toolbar.addEventListener('click', function(e) {
+                const header = e.target.closest('.section-header');
+                if (header) {
+                    const section = header.dataset.section;
+                    const content = document.getElementById(section + 'Content');
                     
-                    // 如果有其他部分需要收起，则等待收起动画完成后再展开当前部分
-                    if (hasOtherExpanded) {
-                        setTimeout(() => {
-                            this.classList.remove('collapsed');
+                    // 检查当前是否已展开
+                    const isCurrentlyCollapsed = header.classList.contains('collapsed');
+                    
+                    if (isCurrentlyCollapsed) {
+                        // 如果当前是折叠状态，则先收起所有其他部分，然后再展开当前部分
+                        let hasOtherExpanded = false;
+                        const sectionHeaders = document.querySelectorAll('.section-header');
+                        sectionHeaders.forEach(otherHeader => {
+                            if (otherHeader !== header && !otherHeader.classList.contains('collapsed')) {
+                                otherHeader.classList.add('collapsed');
+                                const otherSection = otherHeader.dataset.section;
+                                const otherContent = document.getElementById(otherSection + 'Content');
+                                if (otherContent) {
+                                    otherContent.classList.add('collapsed');
+                                    hasOtherExpanded = true;
+                                }
+                            }
+                        });
+                        
+                        // 如果有其他部分需要收起，则等待收起动画完成后再展开当前部分
+                        if (hasOtherExpanded) {
+                            setTimeout(() => {
+                                header.classList.remove('collapsed');
+                                content.classList.remove('collapsed');
+                            }, 100);
+                        } else {
+                            // 如果没有其他部分需要收起，则立即展开当前部分
+                            header.classList.remove('collapsed');
                             content.classList.remove('collapsed');
-                        }, 100);
+                        }
                     } else {
-                        // 如果没有其他部分需要收起，则立即展开当前部分
-                        this.classList.remove('collapsed');
-                        content.classList.remove('collapsed');
+                        // 如果当前是展开状态，则收起它
+                        header.classList.add('collapsed');
+                        content.classList.add('collapsed');
                     }
-                } else {
-                    // 如果当前是展开状态，则收起它
-                    this.classList.add('collapsed');
-                    content.classList.add('collapsed');
                 }
             });
-        });
+        }
     </script>
 </body>
 </html>
