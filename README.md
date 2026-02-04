@@ -28,6 +28,8 @@
 
 ## 安装与快速开始
 
+GitHub Pages：https://xinghai183.github.io/beijing-subway-map-super
+
 克隆仓库：
 ```bash
 git clone https://github.com/XINGHAI183/beijing-subway-map-super
