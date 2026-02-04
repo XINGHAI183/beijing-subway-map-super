@@ -28,7 +28,7 @@
 
 ## 安装与快速开始
 
-GitHub Pages：https://xinghai183.github.io/beijing-subway-map-super
+GitHub Pages：https://xinghai183.github.io/BSMS/
 
 克隆仓库：
 ```bash
