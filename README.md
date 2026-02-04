@@ -32,7 +32,7 @@ GitHub Pages：https://xinghai183.github.io/BSMS/
 
 克隆仓库：
 ```bash
-git clone https://github.com/XINGHAI183/beijing-subway-map-super
+git clone https://github.com/XINGHAI183/BSMS
 cd beijing-subway-map-super
 ```
 
